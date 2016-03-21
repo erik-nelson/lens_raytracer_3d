@@ -1,2 +1,0 @@
-/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar cq liblens_raytracer_3d.a  CMakeFiles/lens_raytracer_3d.dir/src/cpp/lens/lens.cpp.o CMakeFiles/lens_raytracer_3d.dir/src/cpp/raytracing/lens_raytracer.cpp.o CMakeFiles/lens_raytracer_3d.dir/src/cpp/raytracing/scene.cpp.o CMakeFiles/lens_raytracer_3d.dir/src/cpp/shading/shader.cpp.o CMakeFiles/lens_raytracer_3d.dir/src/cpp/shading/shader_factory.cpp.o
-/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib liblens_raytracer_3d.a

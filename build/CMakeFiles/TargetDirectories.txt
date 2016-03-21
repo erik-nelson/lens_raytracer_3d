@@ -1,2 +1,0 @@
-/Users/eanelson/Git/lens_raytracer_3d/build/exec/CMakeFiles/raytracer.dir
-/Users/eanelson/Git/lens_raytracer_3d/build/CMakeFiles/lens_raytracer_3d.dir
