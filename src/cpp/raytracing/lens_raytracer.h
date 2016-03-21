@@ -88,6 +88,9 @@ class LensRaytracer {
   GLuint specular_mat_;
   GLuint camera_pos_;
 
+  // Rendering options.
+  bool draw_axes_;
+
   // A scene that we will add lenses to.
   Scene scene_;
 

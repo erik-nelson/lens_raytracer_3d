@@ -24,6 +24,6 @@ void main() {
   // Color is a sum of diffuse, ambient, and specular light contributions.
   // vec3 vertex_color = specular_light * v_light_color;
   vec3 vertex_color = (diffuse_light + ambient_light) * v_light_color;
-  // gl_FragColor = vec4(vertex_color.x, vertex_color.y, vertex_color.z, 1.0);
-  gl_FragColor = vec4(v_vertex_normal.x, v_vertex_normal.y, v_vertex_normal.z, 1.0);
+  gl_FragColor = vec4(vertex_color.x, vertex_color.y, vertex_color.z, 1.0);
+  // gl_FragColor = vec4(v_vertex_normal.x, v_vertex_normal.y, v_vertex_normal.z, 1.0);
 }

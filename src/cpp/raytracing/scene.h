@@ -57,7 +57,7 @@ class Scene {
   // Load lenses, lights, and objects from a .yaml file.
   bool LoadFromFile(const std::string& filename);
 
-  void Render();
+  void Render(bool draw_axes);
 
   // Create buffer objects for all loaded lenses, objects, etc.
   void MakeBufferObjects();
@@ -67,6 +67,9 @@ class Scene {
   bool GetLens(unsigned int index, Lens* lens) const;
 
  private:
+
+  // Draw (x, y, z) axes;
+  void RenderAxes();
 
   std::vector<Lens> lenses_;
 };

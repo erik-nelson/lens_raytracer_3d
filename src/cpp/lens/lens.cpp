@@ -42,13 +42,6 @@ Lens::Lens() : r1_(0.0), r2_(0.0), t_(0.0), w_(0.0), n_(0.0), index_size_(0) {
   // Initialize position and orientation to zero.
   position_ = glm::vec3(0.f);
   orientation_ = glm::vec3(0.f);
-
-  // Initialize buffer objects.
-  GLuint buffers[3];
-  glGenBuffers(3, buffers);
-  vertex_buffer_object_ = buffers[0];
-  normal_buffer_object_ = buffers[1];
-  index_buffer_object_ = buffers[2];
 }
 
 Lens::~Lens() {
@@ -57,6 +50,15 @@ Lens::~Lens() {
                        normal_buffer_object_,
                        index_buffer_object_};
   glDeleteBuffers(3, buffers);
+}
+
+void Lens::Initialize() {
+  // Initialize buffer objects.
+  GLuint buffers[3];
+  glGenBuffers(3, buffers);
+  vertex_buffer_object_ = buffers[0];
+  normal_buffer_object_ = buffers[1];
+  index_buffer_object_ = buffers[2];
 }
 
 double Lens::GetRadius1() const {
@@ -153,190 +155,10 @@ void Lens::MakeBufferObjects() {
   std::vector<GLfloat> normals;
   std::vector<GLuint> indices;
 
-  // The lens surface is made of rings of varying vertical angle.
-  // We will put all of the vertex and normal data into 'vertices' and
-  // 'normals', but will also store indices in 'lens1_rings' and 'lens2_rings'
-  // to determine how vertices are connected into faces that we can render.
-  typedef std::vector<GLuint> Ring;
-  std::vector<Ring> lens1_rings;
-  std::vector<Ring> lens2_rings;
-
-  // Figure out how many rings we need for the top surface.
-  double alpha = 0.5 * M_PI - std::acos(0.5 * w_ / std::abs(r1_));
-  const unsigned int num_rings1 = std::floor(alpha / vertical_increment_);
-
-  // Store vertical angles to iterate over.
-  std::vector<double> v_angles, h_angles;
-  for (unsigned int ii = 0; ii < num_rings1; ++ii)
-    v_angles.push_back(vertical_increment_ * static_cast<double>(ii));
-  v_angles.push_back(alpha);
-
-  for (unsigned int ii = 0; ii < 2.0 * M_PI / horizontal_increment_; ++ii)
-    h_angles.push_back(horizontal_increment_ * static_cast<double>(ii));
-
-  // The first vertex (right at the top of the lens) can be handled separately.
-  vertices.push_back(0.0);
-  vertices.push_back(0.0);
-  vertices.push_back(r1_);
-  Vertex v0 = SphericalToCartesian(r1_, 0.0, 0.0);
-  normals.push_back(v0.x);
-  normals.push_back(v0.y);
-  normals.push_back(v0.z);
-
-  // Iterate around the surface of the first lens vertically from the top out.
-  int index_counter = 1;
-  for (size_t ii = 1; ii < v_angles.size(); ++ii) {
-    double va = v_angles[ii];
-
-    // Iterate around the surface horizontally, storing vertices in a ring.
-    Ring ring;
-    for (size_t jj = 0; jj < h_angles.size(); ++jj) {
-      double ha = h_angles[jj];
-
-      Vertex v = SphericalToCartesian(r1_, va, ha);
-      ring.push_back(index_counter++);
-
-      // Store the vertex and normal.
-      vertices.push_back(v.x);
-      vertices.push_back(v.y);
-      vertices.push_back(v.z);
-
-      const double norm = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-      normals.push_back(v.x / norm);
-      normals.push_back(v.y / norm);
-      normals.push_back(v.z / norm);
-    }
-    lens1_rings.push_back(ring);
-  }
-
-  // Now figure out how to connect lens vertices into triangles.
-  // The very top vertices on the lens can be handled separately since they are
-  // connected by a single vertex.
-  for (size_t ii = 0; ii < lens1_rings[0].size() - 1; ++ii) {
-    indices.push_back(0);
-    indices.push_back(lens1_rings[0][ii]);
-    indices.push_back(lens1_rings[0][ii+1]);
-  }
-  indices.push_back(0);
-  indices.push_back(lens1_rings[0].back());
-  indices.push_back(lens1_rings[0].front());
-
-  // Connect vertices on the lens that are not a part of the very top circle.
-  for (size_t ii = 0; ii < lens1_rings.size() - 1; ++ii) {
-    Ring inner_ring = lens1_rings[ii];
-    Ring outer_ring = lens1_rings[ii + 1];
-
-    for (size_t jj = 0; jj < inner_ring.size() - 1; ++jj) {
-      // Each set of 4 vertices (inner, outer, inner+1, outer+1) gives 2 faces.
-      indices.push_back(inner_ring[jj]);
-      indices.push_back(outer_ring[jj]);
-      indices.push_back(outer_ring[jj + 1]);
-
-      indices.push_back(inner_ring[jj]);
-      indices.push_back(outer_ring[jj + 1]);
-      indices.push_back(inner_ring[jj + 1]);
-    }
-
-    // Handle the wrap around vertices.
-    indices.push_back(inner_ring.back());
-    indices.push_back(outer_ring.back());
-    indices.push_back(outer_ring.front());
-
-    indices.push_back(inner_ring.back());
-    indices.push_back(outer_ring.front());
-    indices.push_back(inner_ring.front());
-  }
-
-
-
-
-
-  alpha = 0.5 * M_PI - std::acos(0.5 * w_ / std::abs(r2_));
-  const unsigned int num_rings2 = std::floor(alpha / vertical_increment_);
-
-  v_angles.clear();
-  for (unsigned int ii = 0; ii < num_rings2; ++ii)
-    v_angles.push_back(vertical_increment_ * static_cast<double>(ii));
-  v_angles.push_back(alpha);
-
-  // Now repeat for the second lens surface.
-  vertices.push_back(0.0);
-  vertices.push_back(0.0);
-  vertices.push_back(-r2_);
-  v0 = SphericalToCartesian(-r2_, 0.0, 0.0);
-  normals.push_back(v0.x);
-  normals.push_back(v0.y);
-  normals.push_back(v0.z);
-
-  // Iterate around the surface of the first lens vertically from the top out.
-  index_counter++;
-  for (size_t ii = 1; ii < v_angles.size(); ++ii) {
-    double va = v_angles[ii];
-
-    // Iterate around the surface horizontally, storing vertices in a ring.
-    Ring ring;
-    for (size_t jj = 0; jj < h_angles.size(); ++jj) {
-      double ha = h_angles[jj];
-
-      Vertex v = SphericalToCartesian(-r2_, va, ha);
-      ring.push_back(index_counter++);
-
-      // Store the vertex and normal.
-      vertices.push_back(v.x);
-      vertices.push_back(v.y);
-      vertices.push_back(v.z);
-
-      const double norm = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-      normals.push_back(v.x / norm);
-      normals.push_back(v.y / norm);
-      normals.push_back(v.z / norm);
-    }
-    lens2_rings.push_back(ring);
-  }
-
-  int last_lens1_index = lens1_rings.back().back();
-  for (size_t ii = 0; ii < lens2_rings[0].size() - 1; ++ii) {
-    indices.push_back(last_lens1_index + 1);
-    indices.push_back(lens2_rings[0][ii]);
-    indices.push_back(lens2_rings[0][ii + 1]);
-  }
-  indices.push_back(last_lens1_index + 1);
-  indices.push_back(lens2_rings[0].back());
-  indices.push_back(lens2_rings[0].front());
-
-  // Connect vertices on the lens that are not a part of the very top circle.
-  for (size_t ii = 0; ii < lens2_rings.size() - 1; ++ii) {
-    Ring inner_ring = lens2_rings[ii];
-    Ring outer_ring = lens2_rings[ii + 1];
-
-    for (size_t jj = 0; jj < inner_ring.size() - 1; ++jj) {
-      // Each set of 4 vertices (inner, outer, inner+1, outer+1) gives 2 faces.
-      indices.push_back(inner_ring[jj]);
-      indices.push_back(outer_ring[jj]);
-      indices.push_back(outer_ring[jj + 1]);
-
-      indices.push_back(inner_ring[jj]);
-      indices.push_back(outer_ring[jj + 1]);
-      indices.push_back(inner_ring[jj + 1]);
-    }
-
-    // Handle the wrap around vertices.
-    indices.push_back(inner_ring.back());
-    indices.push_back(outer_ring.back());
-    indices.push_back(outer_ring.front());
-
-    indices.push_back(inner_ring.back());
-    indices.push_back(outer_ring.front());
-    indices.push_back(inner_ring.front());
-  }
-
-
-
-
-
-
-
-
+  // Create the lens geometry.
+  PopulateLensBufferObjects(true /*1st lens*/, &vertices, &normals, &indices);
+  PopulateLensBufferObjects(false /*2nd lens*/, &vertices, &normals, &indices);
+  PopulateCylinderBufferObject(static_cast<int>(vertices.size()) / 3, &indices);
 
   // Pack vertex data into a buffer object.
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object_);
@@ -353,34 +175,176 @@ void Lens::MakeBufferObjects() {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint),
                &indices.front(), GL_STATIC_DRAW);
   index_size_ = indices.size() * sizeof(GLuint);
+}
 
-#if 0
-  // Iterate around the surface of the second lens vertically from the top out.
-  for (size_t ii = 0; ii < v_angles.size(); ++ii) {
+bool Lens::PopulateLensBufferObjects(bool lens1,
+                                     std::vector<GLfloat>* vertices,
+                                     std::vector<GLfloat>* normals,
+                                     std::vector<GLuint>* indices) {
+  if (!vertices || !normals || !indices) {
+    std::cout << "At least one input container is a null pointer." << std::endl;
+    return false;
+  }
+
+  // The lens surface is made of rings of varying vertical angle.
+  // We will put all of the vertex and normal data into 'vertices' and
+  // 'normals', but will also store indices in 'lens_rings' to determine how
+  // vertices are connected into faces that we can render.
+  std::vector<Ring> lens_rings;
+  const double radius = lens1 ? r1_ : r2_;
+  const double sign = lens1 ? 1.0 : -1.0;
+
+  // Figure out how many rings we need for the this surface.
+  const double alpha = 0.5 * M_PI - std::acos(0.5 * w_ / std::abs(radius));
+  const unsigned int n_rings = std::floor(alpha / vertical_increment_);
+
+  // Store vertical angles to iterate over.
+  std::vector<double> v_angles, h_angles;
+  for (unsigned int ii = 0; ii < n_rings; ++ii)
+    v_angles.push_back(vertical_increment_ * static_cast<double>(ii));
+  v_angles.push_back(alpha);
+
+  for (unsigned int ii = 0; ii < 2.0 * M_PI / horizontal_increment_; ++ii)
+    h_angles.push_back(horizontal_increment_ * static_cast<double>(ii));
+
+  // Set an offset for vertex z position.
+  const double offset = 0.5 * t_;
+
+  // Check for lens feasibility.
+  if (w_ > 2.0 * std::abs(radius)) {
+    std::cout << "Lens parameters generate an infeasible lens." << std::endl;
+    return false;
+  }
+
+  // The first vertex (at the top or bottom of the lens) can be handled
+  // separately.
+  const int first_index = vertices->size() / 3;
+  int index_counter = first_index;
+  vertices->push_back(position_.x);
+  vertices->push_back(position_.y);
+  vertices->push_back(sign * offset + position_.z);
+  normals->push_back(0.0);
+  normals->push_back(0.0);
+  normals->push_back(sign);
+  index_counter++;
+
+  // Iterate around the surface of the first lens vertically from the top out.
+  for (size_t ii = 1; ii < v_angles.size(); ++ii) {
     double va = v_angles[ii];
 
     // Iterate around the surface horizontally, storing vertices in a ring.
     Ring ring;
     for (size_t jj = 0; jj < h_angles.size(); ++jj) {
-      double ha = h_angles[jj];
+      const double ha = h_angles[jj];
 
-      Vertex v = SphericalToCartesian(r2_, va, ha);
-      ring.push_back(v);
+      Vertex v = SphericalToCartesian(radius, va, ha);
+      v.z *= sign;
+
+      // Rotate the vertex to the desired orientation.
+      // TODO
+
+      // Store the vertex's normal before translating it.
+      const double norm = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+      const double flip = radius < 0.0 ? -1.0 : 1.0;
+      normals->push_back(flip * v.x / norm);
+      normals->push_back(flip * v.y / norm);
+      normals->push_back(flip * v.z / norm);
+
+      // Translate the vertex to the desired position.
+      v.z += sign * (offset - radius);
+
+      v.x += position_.x;
+      v.y += position_.y;
+      v.z += position_.z;
 
       // Store the vertex and normal.
-      vertices.push_back(v.x);
-      vertices.push_back(v.y);
-      vertices.push_back(v.z);
+      vertices->push_back(v.x);
+      vertices->push_back(v.y);
+      vertices->push_back(v.z);
 
-      const double norm = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-      normals.push_back(v.x / norm);
-      normals.push_back(v.y / norm);
-      normals.push_back(v.z / norm);
+      // Store the index of this vertex/normal pair.
+      ring.push_back(index_counter++);
     }
-    lens2_rings.push_back(ring);
+    lens_rings.push_back(ring);
   }
-#endif
 
+  // Now figure out how to connect lens vertices into triangles.
+  // The very top vertices on the lens can be handled separately since they are
+  // connected by a single vertex.
+  if (lens_rings.size() != 0) {
+    for (size_t ii = 0; ii < lens_rings[0].size() - 1; ++ii) {
+      indices->push_back(first_index);
+      indices->push_back(lens_rings[0][ii]);
+      indices->push_back(lens_rings[0][ii + 1]);
+    }
+    indices->push_back(first_index);
+    indices->push_back(lens_rings[0].back());
+    indices->push_back(lens_rings[0].front());
+  }
+
+  // Connect vertices on the lens that are not a part of the very top circle.
+  for (int ii = 0; ii < static_cast<int>(lens_rings.size()) - 1; ++ii) {
+    Ring inner_ring = lens_rings[ii];
+    Ring outer_ring = lens_rings[ii + 1];
+
+    for (int jj = 0; jj < static_cast<int>(inner_ring.size()) - 1; ++jj) {
+      // Each set of 4 vertices (inner, outer, inner+1, outer+1) gives 2 faces.
+      indices->push_back(inner_ring[jj]);
+      indices->push_back(outer_ring[jj]);
+      indices->push_back(outer_ring[jj + 1]);
+
+      indices->push_back(inner_ring[jj]);
+      indices->push_back(outer_ring[jj + 1]);
+      indices->push_back(inner_ring[jj + 1]);
+    }
+
+    // Handle the wrap around vertices.
+    indices->push_back(inner_ring.back());
+    indices->push_back(outer_ring.back());
+    indices->push_back(outer_ring.front());
+
+    indices->push_back(inner_ring.back());
+    indices->push_back(outer_ring.front());
+    indices->push_back(inner_ring.front());
+  }
+
+  return true;
+}
+
+bool Lens::PopulateCylinderBufferObject(int n_vertices, std::vector<GLuint>* indices) {
+  if (!indices) {
+    std::cout << "Index container is a null pointer." << std::endl;
+    return false;
+  }
+
+  // Connect the outer ring of vertices from each of the two lenses.
+  Ring lens1_ring, lens2_ring;
+  const int n_ring_vertices = std::floor(2.0 * M_PI / horizontal_increment_);
+
+  for (size_t ii = 0; ii < n_ring_vertices; ++ii) {
+    lens1_ring.push_back(n_vertices / 2 - n_ring_vertices + ii);
+    lens2_ring.push_back(n_vertices / 1 - n_ring_vertices + ii);
+  }
+
+  for (int ii = 0; ii < n_ring_vertices - 1; ++ii) {
+    indices->push_back(lens1_ring[ii]);
+    indices->push_back(lens1_ring[ii + 1]);
+    indices->push_back(lens2_ring[ii]);
+
+    indices->push_back(lens1_ring[ii + 1]);
+    indices->push_back(lens2_ring[ii + 1]);
+    indices->push_back(lens2_ring[ii]);
+  }
+
+  indices->push_back(lens1_ring.back());
+  indices->push_back(lens1_ring.front());
+  indices->push_back(lens2_ring.back());
+
+  indices->push_back(lens1_ring.front());
+  indices->push_back(lens2_ring.front());
+  indices->push_back(lens2_ring.back());
+
+  return true;
 }
 
 void Lens::Render() {

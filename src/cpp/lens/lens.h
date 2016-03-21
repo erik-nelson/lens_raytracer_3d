@@ -55,6 +55,9 @@ class Lens {
   Lens();
   ~Lens();
 
+  // Allocate buffer objects.
+  void Initialize();
+
   // Getters and setters.
   double GetRadius1() const;
   double GetRadius2() const;
@@ -98,6 +101,19 @@ class Lens {
     GLfloat z;
   };
 
+  // A set of indices of vertices placed in a circular pattern.
+  typedef std::vector<GLuint> Ring;
+
+  // Populate buffer objects with the geometry of the lens faces.
+  bool PopulateLensBufferObjects(bool lens1,
+                                 std::vector<GLfloat>* vertices,
+                                 std::vector<GLfloat>* normals,
+                                 std::vector<GLuint>* indices);
+
+  // Populate buffer objects with the geometry of the cylinder connecting the
+  // two lens faces.
+  bool PopulateCylinderBufferObject(int n_vertices, std::vector<GLuint>* indices);
+
   Vertex SphericalToCartesian(double radius, double vertical_angle,
                               double horizontal_angle);
 
@@ -120,8 +136,8 @@ class Lens {
   int index_size_;
 
   // Variables defining how a lens is rendered.
-  static constexpr double vertical_increment_ = 5.0 * M_PI / 180.0;
-  static constexpr double horizontal_increment_ = 60.0 * M_PI / 180.0;
+  static constexpr double vertical_increment_ = 1.0 * M_PI / 180.0;
+  static constexpr double horizontal_increment_ = 5.0 * M_PI / 180.0;
 
 };
 

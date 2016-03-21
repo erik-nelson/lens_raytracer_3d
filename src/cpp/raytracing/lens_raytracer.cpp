@@ -50,7 +50,8 @@ LensRaytracer::LensRaytracer()
       vertical_angle_(0.0),
       horizontal_angle_(0.0),
       window_width_(0),
-      window_height_(0) {}
+      window_height_(0),
+      draw_axes_(true) {}
 
 LensRaytracer::~LensRaytracer() {
   // Delete shaders.
@@ -88,8 +89,8 @@ bool LensRaytracer::Initialize(int window_width, int window_height) {
   return true;
 }
 
-void LensRaytracer::Update(GLFWwindow* window, double elapsed, double total_elapsed) {
-
+void LensRaytracer::Update(GLFWwindow* window, double elapsed,
+                           double total_elapsed) {
   const glm::vec3 forward = glm::normalize(lookat_ - eye_);
   const glm::vec3 right = glm::normalize(glm::cross(forward, up_));
 
@@ -116,6 +117,12 @@ void LensRaytracer::Update(GLFWwindow* window, double elapsed, double total_elap
   }
   if (glfwGetKey(window, 'G')) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  }
+  if (glfwGetKey(window, 'V')) {
+    draw_axes_ = true;
+  }
+  if (glfwGetKey(window, 'B')) {
+    draw_axes_ = false;
   }
 
   // Check for mouse input.
@@ -168,12 +175,13 @@ void LensRaytracer::Render(double elapsed, double total_elapsed) {
   SetMaterial();
 
   // Render the scene.
-  scene_.Render();
+  scene_.Render(draw_axes_);
 }
 
 void LensRaytracer::LinkShader() {
   // Get vertex and fragment shader.
-  static Shader* shader = ShaderFactory::Instance()->GetShader("Lens Raytracer");
+  static Shader* shader =
+      ShaderFactory::Instance()->GetShader("Lens Raytracer");
 
   // Link matrices.
   model_matrix_ = glGetUniformLocation(shader->GetProgram(), "u_model_matrix");
@@ -194,11 +202,11 @@ void LensRaytracer::LinkShader() {
 
 void LensRaytracer::ResetModel() {
   // Get handle to model matrix and set to identity.
-  glUniformMatrix4fv(model_matrix_, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.f)));
+  glUniformMatrix4fv(model_matrix_, 1, GL_FALSE,
+                     glm::value_ptr(glm::mat4(1.f)));
 }
 
-void LensRaytracer::ModelTransform() {
-}
+void LensRaytracer::ModelTransform() {}
 
 void LensRaytracer::ViewTransform() {
   // Set the view matrix based on the eye, lookat, and up vectors.

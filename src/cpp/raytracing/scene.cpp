@@ -111,13 +111,34 @@ bool Scene::LoadFromFile(const std::string& filename) {
     }
   }
 
+  // Loop back through and create buffer objects for all new lenses.
+  for (size_t ii = 0; ii < lenses_.size(); ++ii)
+    lenses_[ii].Initialize();
+
   return true;
 }
 
-void Scene::Render() {
-  for (unsigned int ii = 0; ii < lenses_.size(); ++ii) {
+void Scene::Render(bool draw_axes) {
+  if (draw_axes) {
+    // Draw some axes.
+    RenderAxes();
+  }
+
+  // Render lenses.
+  for (size_t ii = 0; ii < lenses_.size(); ++ii) {
     lenses_[ii].Render();
   }
+}
+
+void Scene::RenderAxes() {
+  glBegin(GL_LINES);
+  glVertex3f(0.0, 0.0, 0.0);
+  glVertex3f(1.0, 0.0, 0.0);
+  glVertex3f(0.0, 0.0, 0.0);
+  glVertex3f(0.0, 1.0, 0.0);
+  glVertex3f(0.0, 0.0, -1.0);
+  glVertex3f(0.0, 0.0, 1.0);
+  glEnd();
 }
 
 void Scene::MakeBufferObjects() {
