@@ -1,0 +1,23 @@
+# Data, build, binary directories
+data
+build
+bin
+
+# Swap files
+*.swp
+*.swo
+*~
+
+# OSX dir files
+.DS_store
+
+# Compiled object files
+*.slo
+*.lo
+*.o
+
+# Compiled dynamic and static libraries
+*.so
+*.dylib
+*.la
+*.a
