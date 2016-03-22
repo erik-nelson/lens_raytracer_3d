@@ -15,10 +15,10 @@ We follow the standard CMAKE build scheme. Just download the repository and from
 mkdir build
 cd build
 cmake ..
- make
+make
 ```
 
-## Execution instructions
+## Run Instructions
 The current primary executable will simulate rays emitted from an area light source passing through the lens stack described in the `lens_raytracer_3d/config/scene1.yaml` file. To run, type:
 
 ```bash

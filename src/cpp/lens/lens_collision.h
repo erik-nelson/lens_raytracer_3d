@@ -36,47 +36,49 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// This class defines a scene containing lenses, objects, and light sources.
+// Model a collision between a 3D ray and a lens. An incoming ray (assuming no
+// total internal reflection) will have two collisions with the lens. Therefore
+// a collision can be modeled as a set of three rays: one incoming ray, one
+// internal ray, and one outgoing ray.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef RAYTRACING_SCENE_H
-#define RAYTRACING_SCENE_H
+#ifndef LENS_LENS_COLLISION_H
+#define LENS_LENS_COLLISION_H
 
 #include <lens/lens.h>
 #include <raytracing/ray.h>
 
-#include <fstream>
-#include <string>
-#include <vector>
-
-class Scene {
+class LensCollision {
  public:
-  Scene();
-  ~Scene();
+  LensCollision();
+  ~LensCollision();
 
-  // Load lenses, lights, and objects from a .yaml file.
-  bool LoadFromFile(const std::string& filename);
-
-  void Render(bool draw_axes);
-
-  // Create buffer objects for all loaded lenses, objects, etc.
-  void MakeBufferObjects();
+  // Calculate collisions between a specified ray and a lens, storing collision
+  // details internally. Return false if there is no collision between the ray
+  // and lens.
+  bool Compute(const Ray& incoming, const Lens& lens);
 
   // Getters and setters.
-  void AddLens(const Lens& lens);
-  void AddRay(const Ray& ray);
+  const Ray& GetIncomingRay() const;
+  const Ray& GetInternalRay() const;
+  const Ray& GetOutgoingRay() const;
+  const Lens& GetLens() const;
 
-  bool GetLens(unsigned int index, Lens* lens) const;
-  bool GetRay(unsigned int index, Ray* ray) const;
+  void SetIncomingRay(const Ray& incoming);
+  void SetInternalRay(const Ray& internal);
+  void SetOutgoingRay(const Ray& outgoing);
+  void SetLens(const Lens& lens);
 
  private:
 
-  // Draw (x, y, z) axes;
-  void RenderAxes();
+  // Three rays model a collision.
+  Ray incoming_;
+  Ray internal_;
+  Ray outgoing_;
 
-  std::vector<Lens> lenses_;
-  std::vector<Ray> rays_;
+  // Copy the lens that this collision refers to.
+  Lens lens_;
 };
 
 #endif

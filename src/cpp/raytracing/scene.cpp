@@ -57,13 +57,15 @@ bool Scene::LoadFromFile(const std::string& filename) {
   // Read lines from the file.
   std::string object_line;
   while (std::getline(file, object_line)) {
+
+    // Create a lens.
     if (strings::HasSubstring(object_line, "lens")) {
 
-      // Create a lens and load its parameters.
       Lens lens;
       std::string parameter;
       std::vector<std::string> tokens;
 
+      // Load lens parameters.
       if (!std::getline(file, parameter)) break;
       if (!strings::HasSubstring(parameter, "parameters")) break;
       if (!std::getline(file, parameter)) break;
@@ -109,6 +111,43 @@ bool Scene::LoadFromFile(const std::string& filename) {
       lens.Print("Loaded lens with parameters:");
       lenses_.push_back(lens);
     }
+
+    // Create a ray.
+    if (strings::HasSubstring(object_line, "ray")) {
+
+      Ray ray;
+      std::string parameter;
+      std::vector<std::string> tokens;
+
+      // Load ray parameters.
+      if (!std::getline(file, parameter)) break;
+      if (!strings::HasSubstring(parameter, "origin")) break;
+      if (!std::getline(file, parameter)) break;
+      strings::Tokenize(parameter, ' ', &tokens);
+      ray.SetOriginX(std::stod(tokens[1], NULL));
+      if (!std::getline(file, parameter)) break;
+      strings::Tokenize(parameter, ' ', &tokens);
+      ray.SetOriginY(std::stod(tokens[1], NULL));
+      if (!std::getline(file, parameter)) break;
+      strings::Tokenize(parameter, ' ', &tokens);
+      ray.SetOriginZ(std::stod(tokens[1], NULL));
+
+      if (!std::getline(file, parameter)) break;
+      if (!strings::HasSubstring(parameter, "direction")) break;
+      if (!std::getline(file, parameter)) break;
+      strings::Tokenize(parameter, ' ', &tokens);
+      ray.SetDirectionX(std::stod(tokens[1], NULL));
+      if (!std::getline(file, parameter)) break;
+      strings::Tokenize(parameter, ' ', &tokens);
+      ray.SetDirectionY(std::stod(tokens[1], NULL));
+      if (!std::getline(file, parameter)) break;
+      strings::Tokenize(parameter, ' ', &tokens);
+      ray.SetDirectionZ(std::stod(tokens[1], NULL));
+
+      ray.NormalizeDirection();
+      ray.Print("Loaded ray with parameters:");
+      rays_.push_back(ray);
+    }
   }
 
   // Loop back through and create buffer objects for all new lenses.
@@ -136,7 +175,7 @@ void Scene::RenderAxes() {
   glVertex3f(1.0, 0.0, 0.0);
   glVertex3f(0.0, 0.0, 0.0);
   glVertex3f(0.0, 1.0, 0.0);
-  glVertex3f(0.0, 0.0, -1.0);
+  glVertex3f(0.0, 0.0, 0.0);
   glVertex3f(0.0, 0.0, 1.0);
   glEnd();
 }
@@ -151,9 +190,22 @@ void Scene::AddLens(const Lens& lens) {
   lenses_.push_back(lens);
 }
 
+void Scene::AddRay(const Ray& ray) {
+  rays_.push_back(ray);
+}
+
 bool Scene::GetLens(unsigned int index, Lens* lens) const {
   if (index < lenses_.size()) {
     *lens = lenses_[index];
+    return true;
+  }
+
+  return false;
+}
+
+bool Scene::GetRay(unsigned int index, Ray* ray) const {
+  if (index < rays_.size()) {
+    *ray = rays_[index];
     return true;
   }
 

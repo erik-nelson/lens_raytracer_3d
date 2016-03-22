@@ -34,49 +34,28 @@
  * Author: Erik Nelson            ( eanelson@eecs.berkeley.edu )
  */
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// This class defines a scene containing lenses, objects, and light sources.
-//
-///////////////////////////////////////////////////////////////////////////////
+#include <raytracing/path.h>
 
-#ifndef RAYTRACING_SCENE_H
-#define RAYTRACING_SCENE_H
+Path::Path() {}
+Path::~Path() {}
 
-#include <lens/lens.h>
-#include <raytracing/ray.h>
+const std::vector<Ray>& Path::GetPath() const {
+  return path_;
+}
 
-#include <fstream>
-#include <string>
-#include <vector>
+bool Path::GetRay(unsigned int index, Ray* ray) const {
+  if (index < path_.size()) {
+    *ray = path_[index];
+    return true;
+  }
 
-class Scene {
- public:
-  Scene();
-  ~Scene();
+  return false;
+}
 
-  // Load lenses, lights, and objects from a .yaml file.
-  bool LoadFromFile(const std::string& filename);
+void Path::SetPath(const std::vector<Ray>& path) {
+  path_ = path;
+}
 
-  void Render(bool draw_axes);
-
-  // Create buffer objects for all loaded lenses, objects, etc.
-  void MakeBufferObjects();
-
-  // Getters and setters.
-  void AddLens(const Lens& lens);
-  void AddRay(const Ray& ray);
-
-  bool GetLens(unsigned int index, Lens* lens) const;
-  bool GetRay(unsigned int index, Ray* ray) const;
-
- private:
-
-  // Draw (x, y, z) axes;
-  void RenderAxes();
-
-  std::vector<Lens> lenses_;
-  std::vector<Ray> rays_;
-};
-
-#endif
+void Path::AddRay(const Ray& ray) {
+  path_.push_back(ray);
+}

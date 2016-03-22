@@ -36,47 +36,33 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// This class defines a scene containing lenses, objects, and light sources.
+// The Path class defines a set of connected rays that have been traced through
+// a scene.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef RAYTRACING_SCENE_H
-#define RAYTRACING_SCENE_H
+#ifndef RAYTRACING_PATH_H
+#define RAYTRACING_PATH_H
 
-#include <lens/lens.h>
 #include <raytracing/ray.h>
 
-#include <fstream>
-#include <string>
 #include <vector>
 
-class Scene {
+class Path {
  public:
-  Scene();
-  ~Scene();
-
-  // Load lenses, lights, and objects from a .yaml file.
-  bool LoadFromFile(const std::string& filename);
-
-  void Render(bool draw_axes);
-
-  // Create buffer objects for all loaded lenses, objects, etc.
-  void MakeBufferObjects();
+  Path();
+  ~Path();
 
   // Getters and setters.
-  void AddLens(const Lens& lens);
-  void AddRay(const Ray& ray);
-
-  bool GetLens(unsigned int index, Lens* lens) const;
+  const std::vector<Ray>& GetPath() const;
   bool GetRay(unsigned int index, Ray* ray) const;
+  void SetPath(const std::vector<Ray>& path);
+
+  void AddRay(const Ray& ray);
 
  private:
 
-  // Draw (x, y, z) axes;
-  void RenderAxes();
-
-  std::vector<Lens> lenses_;
-  std::vector<Ray> rays_;
+  std::vector<Ray> path_;
 };
 
 #endif

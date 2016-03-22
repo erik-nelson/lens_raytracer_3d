@@ -36,47 +36,54 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// This class defines a scene containing lenses, objects, and light sources.
+// This file defines a ray in 3D space, including an origin and a normalized
+// direction.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef RAYTRACING_SCENE_H
-#define RAYTRACING_SCENE_H
+#ifndef RAYTRACING_RAY_H
+#define RAYTRACING_RAY_H
 
-#include <lens/lens.h>
-#include <raytracing/ray.h>
+#include <glm/glm.hpp>
 
-#include <fstream>
 #include <string>
-#include <vector>
 
-class Scene {
+class Ray {
  public:
-  Scene();
-  ~Scene();
-
-  // Load lenses, lights, and objects from a .yaml file.
-  bool LoadFromFile(const std::string& filename);
-
-  void Render(bool draw_axes);
-
-  // Create buffer objects for all loaded lenses, objects, etc.
-  void MakeBufferObjects();
+  Ray();
+  Ray(const glm::vec3& origin, const glm::vec3& direction);
+  Ray(double ox, double oy, double oz, double dx, double dy, double dz);
+  ~Ray();
 
   // Getters and setters.
-  void AddLens(const Lens& lens);
-  void AddRay(const Ray& ray);
+  const glm::vec3& GetOrigin() const;
+  const glm::vec3& GetDirection() const;
+  double GetOriginX() const;
+  double GetOriginY() const;
+  double GetOriginZ() const;
+  double GetDirectionX() const;
+  double GetDirectionY() const;
+  double GetDirectionZ() const;
 
-  bool GetLens(unsigned int index, Lens* lens) const;
-  bool GetRay(unsigned int index, Ray* ray) const;
+  void SetOrigin(const glm::vec3& origin);
+  void SetDirection(const glm::vec3& direction);
+  void SetOriginX(double x);
+  void SetOriginY(double y);
+  void SetOriginZ(double z);
+  void SetDirectionX(double x);
+  void SetDirectionY(double y);
+  void SetDirectionZ(double z);
+
+  // Normalize direction vector.
+  void NormalizeDirection();
+
+  // Print ray parameters.
+  void Print(const std::string& prefix = std::string());
 
  private:
 
-  // Draw (x, y, z) axes;
-  void RenderAxes();
-
-  std::vector<Lens> lenses_;
-  std::vector<Ray> rays_;
+  glm::vec3 origin_;
+  glm::vec3 direction_;
 };
 
 #endif

@@ -34,49 +34,48 @@
  * Author: Erik Nelson            ( eanelson@eecs.berkeley.edu )
  */
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// This class defines a scene containing lenses, objects, and light sources.
-//
-///////////////////////////////////////////////////////////////////////////////
+#include <lens/lens_collision.h>
 
-#ifndef RAYTRACING_SCENE_H
-#define RAYTRACING_SCENE_H
+LensCollision::LensCollision() {}
+LensCollision::~LensCollision() {}
 
-#include <lens/lens.h>
-#include <raytracing/ray.h>
+bool LensCollision::Compute(const Ray& incoming, const Lens& lens) {
 
-#include <fstream>
-#include <string>
-#include <vector>
+  // Store the input arguments locally.
+  SetLens(lens);
+  SetIncomingRay(incoming);
 
-class Scene {
- public:
-  Scene();
-  ~Scene();
 
-  // Load lenses, lights, and objects from a .yaml file.
-  bool LoadFromFile(const std::string& filename);
+}
 
-  void Render(bool draw_axes);
+const Ray& LensCollision::GetIncomingRay() const {
+  return incoming_;
+}
 
-  // Create buffer objects for all loaded lenses, objects, etc.
-  void MakeBufferObjects();
+const Ray& LensCollision::GetInternalRay() const {
+  return internal_;
+}
 
-  // Getters and setters.
-  void AddLens(const Lens& lens);
-  void AddRay(const Ray& ray);
+const Ray& LensCollision::GetOutgoingRay() const {
+  return outgoing_;
+}
 
-  bool GetLens(unsigned int index, Lens* lens) const;
-  bool GetRay(unsigned int index, Ray* ray) const;
+const Lens& LensCollision::GetLens() const {
+  return lens_;
+}
 
- private:
+void LensCollision::SetIncomingRay(const Ray& incoming) {
+  incoming_ = incoming;
+}
 
-  // Draw (x, y, z) axes;
-  void RenderAxes();
+void LensCollision::SetInternalRay(const Ray& internal) {
+  internal_ = internal;
+}
 
-  std::vector<Lens> lenses_;
-  std::vector<Ray> rays_;
-};
+void LensCollision::SetOutgoingRay(const Ray& outgoing) {
+  outgoing_ = outgoing;
+}
 
-#endif
+void LensCollision::SetLens(const Lens& lens) {
+  lens_ = lens;
+}
