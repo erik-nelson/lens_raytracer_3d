@@ -107,14 +107,17 @@ class Lens {
   typedef std::vector<GLuint> Ring;
 
   // Populate buffer objects with the geometry of the lens faces.
-  bool PopulateLensBufferObjects(bool lens1,
-                                 std::vector<GLfloat>* vertices,
+  bool PopulateLensBufferObjects(bool lens1, std::vector<GLfloat>* vertices,
                                  std::vector<GLfloat>* normals,
-                                 std::vector<GLuint>* indices);
+                                 std::vector<GLuint>* lens_indices,
+                                 std::vector<GLuint>* cylinder_indices);
 
   // Populate buffer objects with the geometry of the cylinder connecting the
   // two lens faces.
-  bool PopulateCylinderBufferObject(int n_vertices, std::vector<GLuint>* indices);
+  bool PopulateCylinderBufferObject(
+      const std::vector<GLuint>& cylinder_indices1,
+      const std::vector<GLuint>& cylinder_indices2,
+      std::vector<GLuint>* indices);
 
   Vertex SphericalToCartesian(double radius, double vertical_angle,
                               double horizontal_angle);

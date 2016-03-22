@@ -90,7 +90,7 @@ void Path::MakeBufferObjects() {
     vertices.push_back(ray.GetOriginZ());
     normals.push_back(ray.GetOriginX());
     normals.push_back(ray.GetOriginY());
-    normals.push_back(ray.GetOriginZ());
+    normals.push_back(0.0);
   }
 
   // Project the last vertex along the final ray's direction.
@@ -100,7 +100,7 @@ void Path::MakeBufferObjects() {
   vertices.push_back(last_ray.GetOriginZ() + 5.f * last_ray.GetDirectionZ());
   normals.push_back(last_ray.GetOriginX() + 5.f * last_ray.GetDirectionX());
   normals.push_back(last_ray.GetOriginY() + 5.f * last_ray.GetDirectionY());
-  normals.push_back(last_ray.GetOriginZ() + 5.f * last_ray.GetDirectionZ());
+  normals.push_back(0.0);
 
   for (int ii = 0; ii < path_.size(); ++ii) {
     indices.push_back(ii);

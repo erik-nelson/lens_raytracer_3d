@@ -162,11 +162,14 @@ void Lens::MakeBufferObjects() {
   std::vector<GLfloat> vertices;
   std::vector<GLfloat> normals;
   std::vector<GLuint> indices;
+  std::vector<GLuint> cylinder_indices1, cylinder_indices2;
 
   // Create the lens geometry.
-  PopulateLensBufferObjects(true /*1st lens*/, &vertices, &normals, &indices);
-  PopulateLensBufferObjects(false /*2nd lens*/, &vertices, &normals, &indices);
-  // PopulateCylinderBufferObject(static_cast<int>(vertices.size()) / 3, &indices);
+  PopulateLensBufferObjects(true /*1st lens*/, &vertices, &normals,
+                            &indices, &cylinder_indices1);
+  PopulateLensBufferObjects(false /*2nd lens*/, &vertices, &normals,
+                            &indices, &cylinder_indices2);
+  PopulateCylinderBufferObject(cylinder_indices1, cylinder_indices2, &indices);
 
   // Pack vertex data into a buffer object.
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object_);
@@ -185,11 +188,11 @@ void Lens::MakeBufferObjects() {
   index_size_ = indices.size() * sizeof(GLuint);
 }
 
-bool Lens::PopulateLensBufferObjects(bool lens1,
-                                     std::vector<GLfloat>* vertices,
+bool Lens::PopulateLensBufferObjects(bool lens1, std::vector<GLfloat>* vertices,
                                      std::vector<GLfloat>* normals,
-                                     std::vector<GLuint>* indices) {
-  if (!vertices || !normals || !indices) {
+                                     std::vector<GLuint>* lens_indices,
+                                     std::vector<GLuint>* cylinder_indices) {
+  if (!vertices || !normals || !lens_indices || !cylinder_indices) {
     std::cout << "At least one input container is a null pointer." << std::endl;
     return false;
   }
@@ -270,6 +273,12 @@ bool Lens::PopulateLensBufferObjects(bool lens1,
       vertices->push_back(v.y);
       vertices->push_back(v.z);
 
+      // If this is the outside ring, store indices to draw the cylinder
+      // connecting the two lens faces.
+      if (ii == v_angles.size() - 1) {
+        cylinder_indices->push_back(index_counter);
+      }
+
       // Store the index of this vertex/normal pair.
       ring.push_back(index_counter++);
     }
@@ -281,13 +290,13 @@ bool Lens::PopulateLensBufferObjects(bool lens1,
   // connected by a single vertex.
   if (lens_rings.size() != 0) {
     for (size_t ii = 0; ii < lens_rings[0].size() - 1; ++ii) {
-      indices->push_back(first_index);
-      indices->push_back(lens_rings[0][ii]);
-      indices->push_back(lens_rings[0][ii + 1]);
+      lens_indices->push_back(first_index);
+      lens_indices->push_back(lens_rings[0][ii]);
+      lens_indices->push_back(lens_rings[0][ii + 1]);
     }
-    indices->push_back(first_index);
-    indices->push_back(lens_rings[0].back());
-    indices->push_back(lens_rings[0].front());
+    lens_indices->push_back(first_index);
+    lens_indices->push_back(lens_rings[0].back());
+    lens_indices->push_back(lens_rings[0].front());
   }
 
   // Connect vertices on the lens that are not a part of the very top circle.
@@ -297,60 +306,54 @@ bool Lens::PopulateLensBufferObjects(bool lens1,
 
     for (int jj = 0; jj < static_cast<int>(inner_ring.size()) - 1; ++jj) {
       // Each set of 4 vertices (inner, outer, inner+1, outer+1) gives 2 faces.
-      indices->push_back(inner_ring[jj]);
-      indices->push_back(outer_ring[jj]);
-      indices->push_back(outer_ring[jj + 1]);
+      lens_indices->push_back(inner_ring[jj]);
+      lens_indices->push_back(outer_ring[jj]);
+      lens_indices->push_back(outer_ring[jj + 1]);
 
-      indices->push_back(inner_ring[jj]);
-      indices->push_back(outer_ring[jj + 1]);
-      indices->push_back(inner_ring[jj + 1]);
+      lens_indices->push_back(inner_ring[jj]);
+      lens_indices->push_back(outer_ring[jj + 1]);
+      lens_indices->push_back(inner_ring[jj + 1]);
     }
 
     // Handle the wrap around vertices.
-    indices->push_back(inner_ring.back());
-    indices->push_back(outer_ring.back());
-    indices->push_back(outer_ring.front());
+    lens_indices->push_back(inner_ring.back());
+    lens_indices->push_back(outer_ring.back());
+    lens_indices->push_back(outer_ring.front());
 
-    indices->push_back(inner_ring.back());
-    indices->push_back(outer_ring.front());
-    indices->push_back(inner_ring.front());
+    lens_indices->push_back(inner_ring.back());
+    lens_indices->push_back(outer_ring.front());
+    lens_indices->push_back(inner_ring.front());
   }
 
   return true;
 }
 
-bool Lens::PopulateCylinderBufferObject(int n_vertices, std::vector<GLuint>* indices) {
+bool Lens::PopulateCylinderBufferObject(
+    const std::vector<GLuint>& cylinder_indices1,
+    const std::vector<GLuint>& cylinder_indices2,
+    std::vector<GLuint>* indices) {
   if (!indices) {
     std::cout << "Index container is a null pointer." << std::endl;
     return false;
   }
 
-  // Connect the outer ring of vertices from each of the two lenses.
-  Ring lens1_ring, lens2_ring;
-  const int n_ring_vertices = std::floor(2.0 * M_PI / horizontal_increment_);
+  for (size_t ii = 0; ii < cylinder_indices1.size() - 1; ++ii) {
+    indices->push_back(cylinder_indices1[ii]);
+    indices->push_back(cylinder_indices1[ii + 1]);
+    indices->push_back(cylinder_indices2[ii]);
 
-  for (size_t ii = 0; ii < n_ring_vertices; ++ii) {
-    lens1_ring.push_back(n_vertices / 2 - n_ring_vertices + ii);
-    lens2_ring.push_back(n_vertices / 1 - n_ring_vertices + ii);
+    indices->push_back(cylinder_indices1[ii + 1]);
+    indices->push_back(cylinder_indices2[ii + 1]);
+    indices->push_back(cylinder_indices2[ii]);
   }
 
-  for (int ii = 0; ii < n_ring_vertices - 1; ++ii) {
-    indices->push_back(lens1_ring[ii]);
-    indices->push_back(lens1_ring[ii + 1]);
-    indices->push_back(lens2_ring[ii]);
+  indices->push_back(cylinder_indices1.back());
+  indices->push_back(cylinder_indices1.front());
+  indices->push_back(cylinder_indices2.back());
 
-    indices->push_back(lens1_ring[ii + 1]);
-    indices->push_back(lens2_ring[ii + 1]);
-    indices->push_back(lens2_ring[ii]);
-  }
-
-  indices->push_back(lens1_ring.back());
-  indices->push_back(lens1_ring.front());
-  indices->push_back(lens2_ring.back());
-
-  indices->push_back(lens1_ring.front());
-  indices->push_back(lens2_ring.front());
-  indices->push_back(lens2_ring.back());
+  indices->push_back(cylinder_indices1.front());
+  indices->push_back(cylinder_indices2.front());
+  indices->push_back(cylinder_indices2.back());
 
   return true;
 }
