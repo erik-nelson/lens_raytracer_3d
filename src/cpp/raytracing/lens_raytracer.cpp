@@ -51,7 +51,7 @@ LensRaytracer::LensRaytracer()
       horizontal_angle_(0.0),
       window_width_(0),
       window_height_(0),
-      draw_axes_(true),
+      draw_axes_(false),
       update_mouse_(true) {}
 
 LensRaytracer::~LensRaytracer() {
@@ -185,7 +185,7 @@ void LensRaytracer::Render(double elapsed, double total_elapsed) {
   SetMaterial();
 
   // Render the scene.
-  scene_.Render(draw_axes_);
+  scene_.Render(draw_axes_, eye_);
 }
 
 void LensRaytracer::LinkShader() {

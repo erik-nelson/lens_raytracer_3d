@@ -39,6 +39,7 @@
 #include <strings/tokenize.h>
 
 #include <iostream>
+#include <numeric>
 
 Scene::Scene() {}
 Scene::~Scene() {}
@@ -157,19 +158,32 @@ bool Scene::LoadFromFile(const std::string& filename) {
   return true;
 }
 
-void Scene::Render(bool draw_axes) {
+void Scene::Render(bool draw_axes, const glm::vec3& camera_position_) {
   if (draw_axes) {
     // Draw some axes.
     RenderAxes();
   }
 
-  // Render lenses.
-  for (const auto& lens : lenses_)
-    lens.Render();
+  // Render ray paths first, since they are opaque.
+  for (const auto& path : paths_) path.Render();
 
-  // Render ray paths.
-  for (const auto& path : paths_)
-    path.Render();
+  // Sort lenses by distance to camera. Render the back one first so that we
+  // alpha blend correctly.
+  std::vector<double> distances;
+  for (const auto& lens : lenses_)
+    distances.push_back(glm::length(camera_position_ - lens.GetPosition()));
+
+  std::vector<int> lens_indices(distances.size());
+  std::iota(lens_indices.begin(), lens_indices.end(), 0);
+  auto comparator = [&distances](int a, int b) {
+    return distances[a] > distances[b];
+  };
+  std::sort(lens_indices.begin(), lens_indices.end(), comparator);
+
+  // Render lenses from back to front.
+  for (const auto& lens_index : lens_indices) {
+    lenses_[lens_index].Render();
+  }
 }
 
 void Scene::ComputePaths() {

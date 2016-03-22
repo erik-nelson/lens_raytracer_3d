@@ -1,7 +1,7 @@
 lens:
   parameters:
     r1: 1.0
-    r2: 2.0
+    r2: 1.0
     t: 0.5
     w: 1.0
     n: 1.53

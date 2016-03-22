@@ -82,6 +82,7 @@ class LensCollision {
   // parameter 'top_face'. If an intersection is found, distance will be set as
   // the distance from the ray's origin to the collision.
   bool RayIntersectsLensFace(bool top_face,
+                             bool first_face,
                              const Ray& ray,
                              const Lens& lens,
                              double* distance) const;
@@ -89,7 +90,7 @@ class LensCollision {
   // Given an input ray and a lens, use Snell's law to compute an output
   // refracted ray.
   Ray GetRefractedRay(bool top_face,
-                      bool coming_in,
+                      bool first_face,
                       double distance,
                       const Ray& in,
                       const Lens& lens);

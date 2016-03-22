@@ -82,8 +82,12 @@ int main(int argc, char** argv) {
 
   // Configure OpenGL.
   glClearColor(1.f, 1.f, 1.f, 0.f);
+  glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glDisable(GL_CULL_FACE);
+  glEnable(GL_ALPHA_TEST);
   glEnable(GL_LINE_SMOOTH);
+  glLineWidth(5.f);
   glClearDepth(1.f);
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);

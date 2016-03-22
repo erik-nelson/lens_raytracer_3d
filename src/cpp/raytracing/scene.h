@@ -59,8 +59,9 @@ class Scene {
   // Load lenses, lights, and objects from a .yaml file.
   bool LoadFromFile(const std::string& filename);
 
-  // Draw lenses and ray paths, if ComputePaths() has been called.
-  void Render(bool draw_axes);
+  // Draw lenses and ray paths, if ComputePaths() has been called. Camera
+  // position must be passed in to sort lens depths for z buffering.
+  void Render(bool draw_axes, const glm::vec3& camera_position_);
 
   // Raytrace all 'rays_' through the scene and find intersections with
   // 'lenses_'. Store ray paths in the local variable 'paths_'. This method will

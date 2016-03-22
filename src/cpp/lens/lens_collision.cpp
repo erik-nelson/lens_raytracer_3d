@@ -50,23 +50,39 @@ bool LensCollision::Compute(const Ray& incoming, const Lens& lens) {
   bool top_face = RayIntersectsTopFaceFirst(incoming, lens);
 
   double distance = 0.0;
-  if (RayIntersectsLensFace(top_face, incoming, lens, &distance)) {
+  if (RayIntersectsLensFace(top_face,
+                            true /*1st face*/,
+                            incoming,
+                            lens,
+                            &distance)) {
+
     // Set the incoming ray.
     incoming_ = incoming;
     incoming_distance_ = distance;
 
     // Compute how the incoming ray refracts.
-    internal_ =
-        GetRefractedRay(top_face, true /*out to in*/, distance, incoming, lens);
+    internal_ = GetRefractedRay(top_face,
+                                true /*out to in*/,
+                                distance,
+                                incoming,
+                                lens);
 
     // Find where the internal ray collides with the second lens face.
-    if (RayIntersectsLensFace(!top_face, internal_, lens, &distance)) {
+    if (RayIntersectsLensFace(!top_face,
+                              false /*2nd face*/,
+                              internal_,
+                              lens,
+                              &distance)) {
+
       // Set the distance along the internal ray before collision.
       internal_distance_ = distance;
 
       // Compute how the internal ray refracts.
-      outgoing_ = GetRefractedRay(!top_face, false /*in to out*/, distance,
-                                  internal_, lens);
+      outgoing_ = GetRefractedRay(!top_face,
+                                  false /*in to out*/,
+                                  distance,
+                                  internal_,
+                                  lens);
     } else {
       // We need both collisions with the lens to be successful.
       return false;
@@ -126,6 +142,7 @@ bool LensCollision::RayIntersectsTopFaceFirst(const Ray& ray,
 }
 
 bool LensCollision::RayIntersectsLensFace(bool top_face,
+                                          bool first_face,
                                           const Ray& ray,
                                           const Lens& lens,
                                           double* distance) const {
@@ -146,7 +163,8 @@ bool LensCollision::RayIntersectsLensFace(bool top_face,
   if (discrim < 0.0)
     return false;
 
-  *distance = -glm::dot(l, (o - c)) + sign * std::sqrt(discrim);
+  *distance =
+      -glm::dot(l, (o - c)) - (first_face ? 1.0 : -1.0) * std::sqrt(discrim);
   if (*distance < 0.0)
     return false;
 
@@ -166,7 +184,7 @@ bool LensCollision::RayIntersectsLensFace(bool top_face,
 }
 
 Ray LensCollision::GetRefractedRay(bool top_face,
-                                   bool coming_in,
+                                   bool first_face,
                                    double distance,
                                    const Ray& in,
                                    const Lens& lens) {
@@ -175,12 +193,14 @@ Ray LensCollision::GetRefractedRay(bool top_face,
 
   // Compute the normal to the lens surface at the collision point.
   const double radius = top_face ? lens.GetRadius1() : lens.GetRadius2();
-  const double sign = top_face ? 1.0 : -1.0;
+  const double sign1 = top_face ? 1.0 : -1.0;
+  const double sign2 = first_face ? 1.0 : -1.0;
+
   const glm::vec3 c = lens.GetPosition() +
-                      glm::vec3(0.0, 0.0, sign * 0.5 * lens.GetThickness()) -
-                      glm::vec3(0.0, 0.0, sign * std::abs(radius));
+                      glm::vec3(0.0, 0.0, sign1 * 0.5 * lens.GetThickness()) -
+                      glm::vec3(0.0, 0.0, sign1 * std::abs(radius));
   const glm::vec3 n =
-      static_cast<float>(sign) * glm::normalize(c - collision_pt);
+      static_cast<float>(sign2) * glm::normalize(collision_pt - c);
 
   // Get angle between incoming ray and normal.
   const double incoming_angle = std::acos(glm::dot(n, -in.GetDirection()));
@@ -201,7 +221,7 @@ Ray LensCollision::GetRefractedRay(bool top_face,
     return out;
   }
 
-  const double snell_coefficient = coming_in ? 1.0 / lens.GetIndexOfRefraction()
+  const double snell_coefficient = first_face ? 1.0 / lens.GetIndexOfRefraction()
                                              : lens.GetIndexOfRefraction();
   const double outgoing_angle =
       std::asin(std::sin(incoming_angle) * snell_coefficient);
