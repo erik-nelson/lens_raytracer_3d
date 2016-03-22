@@ -34,9 +34,12 @@
  * Author: Erik Nelson            ( eanelson@eecs.berkeley.edu )
  */
 
+#include <lens/lens_collision.h>
+#include <raytracing/path.h>
 #include <raytracing/ray.h>
 
 #include <iostream>
+#include <limits>
 
 Ray::Ray() {}
 
@@ -52,6 +55,49 @@ Ray::Ray(double ox, double oy, double oz, double dx, double dy, double dz) {
 }
 
 Ray::~Ray() {}
+
+Path Ray::Trace(const std::vector<Lens>& lenses) const {
+
+  Path path;
+  Ray ray = *this;
+
+  // Get collisions between this ray and all lenses in the scene.
+  bool collisions_remain = true;
+  while (collisions_remain) {
+
+    // Check for collisions with all lenses.
+    LensCollision nearest_collision;
+    double min_distance = std::numeric_limits<double>::infinity();
+
+    bool collision_found = false;
+    for (size_t ii = 0; ii < lenses.size(); ++ii) {
+      LensCollision collision;
+      if (collision.Compute(ray, lenses[ii])) {
+        collision_found = true;
+
+        // Check if this collision was the minimum distance collision.
+        if (collision.GetIncomingDistance() < min_distance) {
+          min_distance = collision.GetIncomingDistance();
+          nearest_collision = collision;
+        }
+      }
+    }
+
+    if (collision_found) {
+      // If we found a collision, add both the incoming and internal rays to the
+      // path, then update the outgoing ray so we can check for more collisions.
+      path.AddRay(nearest_collision.GetIncomingRay());
+      path.AddRay(nearest_collision.GetInternalRay());
+      ray = nearest_collision.GetOutgoingRay();
+    } else {
+      // If no more collisions exist, store the final ray and exit the loop
+      path.AddRay(ray);
+      collisions_remain = false;
+    }
+  }
+
+  return path;
+}
 
 const glm::vec3& Ray::GetOrigin() const {
   return origin_;
@@ -122,7 +168,7 @@ void Ray::NormalizeDirection() {
   direction_ = glm::normalize(direction_);
 }
 
-void Ray::Print(const std::string& prefix) {
+void Ray::Print(const std::string& prefix) const {
   if (!prefix.empty())
     std::cout << prefix << std::endl;
 

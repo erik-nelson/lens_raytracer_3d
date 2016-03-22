@@ -36,8 +36,26 @@
 
 #include <raytracing/path.h>
 
+#include <iostream>
+
 Path::Path() {}
-Path::~Path() {}
+
+Path::~Path() {
+  // Free buffer objects.
+  GLuint buffers[3] = {vertex_buffer_object_,
+                       normal_buffer_object_,
+                       index_buffer_object_};
+  glDeleteBuffers(3, buffers);
+}
+
+void Path::Initialize() {
+  // Initialize buffer objects.
+  GLuint buffers[3];
+  glGenBuffers(3, buffers);
+  vertex_buffer_object_ = buffers[0];
+  normal_buffer_object_ = buffers[1];
+  index_buffer_object_ = buffers[2];
+}
 
 const std::vector<Ray>& Path::GetPath() const {
   return path_;
@@ -58,4 +76,65 @@ void Path::SetPath(const std::vector<Ray>& path) {
 
 void Path::AddRay(const Ray& ray) {
   path_.push_back(ray);
+}
+
+void Path::MakeBufferObjects() {
+  // Vertex, normal, and index containers.
+  std::vector<GLfloat> vertices;
+  std::vector<GLfloat> normals;
+  std::vector<GLuint> indices;
+
+  for (const auto& ray : path_) {
+    vertices.push_back(ray.GetOriginX());
+    vertices.push_back(ray.GetOriginY());
+    vertices.push_back(ray.GetOriginZ());
+    normals.push_back(ray.GetOriginX());
+    normals.push_back(ray.GetOriginY());
+    normals.push_back(ray.GetOriginZ());
+  }
+
+  // Project the last vertex along the final ray's direction.
+  Ray last_ray = path_.back();
+  vertices.push_back(last_ray.GetOriginX() + 5.f * last_ray.GetDirectionX());
+  vertices.push_back(last_ray.GetOriginY() + 5.f * last_ray.GetDirectionY());
+  vertices.push_back(last_ray.GetOriginZ() + 5.f * last_ray.GetDirectionZ());
+  normals.push_back(last_ray.GetOriginX() + 5.f * last_ray.GetDirectionX());
+  normals.push_back(last_ray.GetOriginY() + 5.f * last_ray.GetDirectionY());
+  normals.push_back(last_ray.GetOriginZ() + 5.f * last_ray.GetDirectionZ());
+
+  for (int ii = 0; ii < path_.size(); ++ii) {
+    indices.push_back(ii);
+    indices.push_back(ii + 1);
+  }
+
+  // Pack vertex data into a buffer object.
+  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object_);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat),
+               &vertices.front(), GL_STATIC_DRAW);
+
+  // Pack normal data into a buffer object.
+  glBindBuffer(GL_ARRAY_BUFFER, normal_buffer_object_);
+  glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(GLfloat),
+               &normals.front(), GL_STATIC_DRAW);
+
+  // Pack index data into a buffer object.
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_object_);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint),
+               &indices.front(), GL_STATIC_DRAW);
+  index_size_ = indices.size() * sizeof(GLuint);
+}
+
+void Path::Render() const {
+  glEnableVertexAttribArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object_);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+  glEnableVertexAttribArray(1);
+  glBindBuffer(GL_ARRAY_BUFFER, normal_buffer_object_);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_object_);
+  glDrawElements(GL_LINES, index_size_, GL_UNSIGNED_INT, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glDisableVertexAttribArray(0);
+  glDisableVertexAttribArray(1);
 }

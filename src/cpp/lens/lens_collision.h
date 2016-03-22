@@ -65,17 +65,43 @@ class LensCollision {
   const Ray& GetOutgoingRay() const;
   const Lens& GetLens() const;
 
+  double GetIncomingDistance() const;
+  double GetInternalDistance() const;
+
   void SetIncomingRay(const Ray& incoming);
   void SetInternalRay(const Ray& internal);
   void SetOutgoingRay(const Ray& outgoing);
   void SetLens(const Lens& lens);
 
  private:
+  // Check if a ray will intersect the top face of the lens first, or the bottom
+  // face.
+  bool RayIntersectsTopFaceFirst(const Ray& ray, const Lens& lens) const;
+
+  // Check if the input ray intersects the lens face specified by the input
+  // parameter 'top_face'. If an intersection is found, distance will be set as
+  // the distance from the ray's origin to the collision.
+  bool RayIntersectsLensFace(bool top_face,
+                             const Ray& ray,
+                             const Lens& lens,
+                             double* distance) const;
+
+  // Given an input ray and a lens, use Snell's law to compute an output
+  // refracted ray.
+  Ray GetRefractedRay(bool top_face,
+                      bool coming_in,
+                      double distance,
+                      const Ray& in,
+                      const Lens& lens);
 
   // Three rays model a collision.
   Ray incoming_;
   Ray internal_;
   Ray outgoing_;
+
+  // Distance along incoming and internal rays before collision.
+  double incoming_distance_;
+  double internal_distance_;
 
   // Copy the lens that this collision refers to.
   Lens lens_;

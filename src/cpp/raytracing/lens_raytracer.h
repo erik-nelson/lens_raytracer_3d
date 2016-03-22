@@ -90,6 +90,7 @@ class LensRaytracer {
 
   // Rendering options.
   bool draw_axes_;
+  bool update_mouse_;
 
   // A scene that we will add lenses to.
   Scene scene_;

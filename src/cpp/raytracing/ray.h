@@ -44,9 +44,15 @@
 #ifndef RAYTRACING_RAY_H
 #define RAYTRACING_RAY_H
 
+#include <lens/lens.h>
+
 #include <glm/glm.hpp>
 
 #include <string>
+#include <vector>
+
+// Forward declaration of Path class as a return type for the Trace() method.
+class Path;
 
 class Ray {
  public:
@@ -54,6 +60,10 @@ class Ray {
   Ray(const glm::vec3& origin, const glm::vec3& direction);
   Ray(double ox, double oy, double oz, double dx, double dy, double dz);
   ~Ray();
+
+  // Trace this ray through a scene with a set of lenses, returning the
+  // resulting path.
+  Path Trace(const std::vector<Lens>& lenses) const;
 
   // Getters and setters.
   const glm::vec3& GetOrigin() const;
@@ -78,7 +88,7 @@ class Ray {
   void NormalizeDirection();
 
   // Print ray parameters.
-  void Print(const std::string& prefix = std::string());
+  void Print(const std::string& prefix = std::string()) const;
 
  private:
 

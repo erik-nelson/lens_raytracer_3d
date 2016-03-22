@@ -77,6 +77,14 @@ double Lens::GetWidth() const {
   return w_;
 }
 
+double Lens::GetIndexOfRefraction() const {
+  return n_;
+}
+
+const glm::vec3& Lens::GetPosition() const {
+  return position_;
+}
+
 double Lens::GetX() const {
   return position_.x;
 }
@@ -89,6 +97,10 @@ double Lens::GetZ() const {
   return position_.z;
 }
 
+const glm::vec3& Lens::GetOrientation() const {
+  return orientation_;
+}
+
 double Lens::GetRoll() const {
   return orientation_.x;
 }
@@ -99,10 +111,6 @@ double Lens::GetPitch() const {
 
 double Lens::GetYaw() const {
   return orientation_.z;
-}
-
-double Lens::GetIndexOfRefraction() const {
-  return n_;
 }
 
 void Lens::SetRadius1(double r1) {
@@ -158,7 +166,7 @@ void Lens::MakeBufferObjects() {
   // Create the lens geometry.
   PopulateLensBufferObjects(true /*1st lens*/, &vertices, &normals, &indices);
   PopulateLensBufferObjects(false /*2nd lens*/, &vertices, &normals, &indices);
-  PopulateCylinderBufferObject(static_cast<int>(vertices.size()) / 3, &indices);
+  // PopulateCylinderBufferObject(static_cast<int>(vertices.size()) / 3, &indices);
 
   // Pack vertex data into a buffer object.
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object_);
@@ -347,7 +355,7 @@ bool Lens::PopulateCylinderBufferObject(int n_vertices, std::vector<GLuint>* ind
   return true;
 }
 
-void Lens::Render() {
+void Lens::Render() const {
   glEnableVertexAttribArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object_);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
@@ -362,7 +370,7 @@ void Lens::Render() {
   glDisableVertexAttribArray(1);
 }
 
-void Lens::Print(const std::string& prefix) {
+void Lens::Print(const std::string& prefix) const {
   if (!prefix.empty())
     std::cout << prefix << std::endl;
 

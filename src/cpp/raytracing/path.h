@@ -37,7 +37,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // The Path class defines a set of connected rays that have been traced through
-// a scene.
+// a scene. A Path is defined as an ordered set of Ray objects. Note that the
+// Ray object's direction is irrelevant (except for the final ray), and that the
+// path will be formed by connecting ray origins.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -53,6 +55,9 @@ class Path {
   Path();
   ~Path();
 
+  // Allocate buffer objects.
+  void Initialize();
+
   // Getters and setters.
   const std::vector<Ray>& GetPath() const;
   bool GetRay(unsigned int index, Ray* ray) const;
@@ -60,9 +65,21 @@ class Path {
 
   void AddRay(const Ray& ray);
 
+  // After setting parameters, create vertex, normal, and index buffer objects.
+  void MakeBufferObjects();
+
+  // Draw this path.
+  void Render() const;
+
  private:
 
   std::vector<Ray> path_;
+
+  // Buffer objects.
+  GLuint vertex_buffer_object_;
+  GLuint normal_buffer_object_;
+  GLuint index_buffer_object_;
+  int index_size_;
 };
 
 #endif

@@ -67,8 +67,8 @@ int main(int argc, char** argv) {
   }
 
   // Create a window.
-  const int window_size_x = 1024;
-  const int window_size_y = 1024;
+  const int window_size_x = 1920;
+  const int window_size_y = 1080;
   GLFWwindow* window = glfwCreateWindow(
       window_size_x, window_size_y, "Lens Raytracer", NULL, NULL);
   if (!window) {

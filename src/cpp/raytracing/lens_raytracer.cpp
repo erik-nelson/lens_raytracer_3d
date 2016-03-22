@@ -51,7 +51,8 @@ LensRaytracer::LensRaytracer()
       horizontal_angle_(0.0),
       window_width_(0),
       window_height_(0),
-      draw_axes_(true) {}
+      draw_axes_(true),
+      update_mouse_(true) {}
 
 LensRaytracer::~LensRaytracer() {
   // Delete shaders.
@@ -85,6 +86,7 @@ bool LensRaytracer::Initialize(int window_width, int window_height) {
       strings::JoinFilepath(LR3D_CONFIG_DIR, "scene1.yaml");
   scene_.LoadFromFile(scene_file);
   scene_.MakeBufferObjects();
+  scene_.ComputePaths();
 
   return true;
 }
@@ -124,33 +126,41 @@ void LensRaytracer::Update(GLFWwindow* window, double elapsed,
   if (glfwGetKey(window, 'B')) {
     draw_axes_ = false;
   }
+  if (glfwGetKey(window, 'N')) {
+    update_mouse_ = false;
+  }
+  if (glfwGetKey(window, 'M')) {
+    update_mouse_ = true;
+  }
 
   // Check for mouse input.
   glfwGetCursorPos(window, &mx1_, &my1_);
 
-  // Handle the very first update call.
-  if (mx0_ == 0 && my0_ == 0) {
+  if (update_mouse_) {
+    // Handle the very first update call.
+    if (mx0_ == 0 && my0_ == 0) {
+      mx0_ = mx1_;
+      my0_ = my1_;
+    }
+
+    // Compute delta mouse input.
+    mdx_ = mx1_ - mx0_;
+    mdy_ = my1_ - my0_;
+
+    // Set old mouse positions.
     mx0_ = mx1_;
     my0_ = my1_;
-  }
 
-  // Compute delta mouse input.
-  mdx_ = mx1_ - mx0_;
-  mdy_ = my1_ - my0_;
+    // Apply rotations.
+    vertical_angle_ -= mdy_ / 400.0;
+    horizontal_angle_ -= mdx_ / 400.0;
 
-  // Set old mouse positions.
-  mx0_ = mx1_;
-  my0_ = my1_;
-
-  // Apply rotations.
-  vertical_angle_ -= mdy_ / 400.0;
-  horizontal_angle_ -= mdx_ / 400.0;
-
-  // Limit user to looking up or down 85 degrees in either direction.
-  if (vertical_angle_ > max_angle_) {
-    vertical_angle_ = max_angle_;
-  } else if (vertical_angle_ < -max_angle_) {
-    vertical_angle_ = -max_angle_;
+    // Limit user to looking up or down 85 degrees in either direction.
+    if (vertical_angle_ > max_angle_) {
+      vertical_angle_ = max_angle_;
+    } else if (vertical_angle_ < -max_angle_) {
+      vertical_angle_ = -max_angle_;
+    }
   }
 
   lookat_ = glm::vec3(eye_.x + cos(vertical_angle_) * sin(horizontal_angle_),

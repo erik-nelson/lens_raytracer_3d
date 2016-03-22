@@ -44,6 +44,7 @@
 #define RAYTRACING_SCENE_H
 
 #include <lens/lens.h>
+#include <raytracing/path.h>
 #include <raytracing/ray.h>
 
 #include <fstream>
@@ -58,7 +59,13 @@ class Scene {
   // Load lenses, lights, and objects from a .yaml file.
   bool LoadFromFile(const std::string& filename);
 
+  // Draw lenses and ray paths, if ComputePaths() has been called.
   void Render(bool draw_axes);
+
+  // Raytrace all 'rays_' through the scene and find intersections with
+  // 'lenses_'. Store ray paths in the local variable 'paths_'. This method will
+  // clear 'paths_' and recompute when called.
+  void ComputePaths();
 
   // Create buffer objects for all loaded lenses, objects, etc.
   void MakeBufferObjects();
@@ -75,8 +82,15 @@ class Scene {
   // Draw (x, y, z) axes;
   void RenderAxes();
 
+  // Lenses and rays are loaded into the scene or added manually.
   std::vector<Lens> lenses_;
   std::vector<Ray> rays_;
+
+  // Paths are computed by tracing 'rays_' through all 'lenses_' in the scene
+  // upon a call to ComputePaths(). They are stored in the 'paths_' variable
+  // until ComputePaths() is called again. Paths are rendered on calls to
+  // 'Render()'.
+  std::vector<Path> paths_;
 };
 
 #endif

@@ -4,23 +4,7 @@ lens:
     r2: 1.0
     t: 0.5
     w: 1.0
-    n: 1.530
-  position:
-    x: 1.0
-    y: 0.0
-    z: 0.0
-  orientation:
-    roll: 0.0
-    pitch: 0.0
-    yaw: 0.0
-
-lens:
-  parameters:
-    r1: -1.0
-    r2: -1.0
-    t: 0.5
-    w: 1.0
-    n: 1.530
+    n: 1.53
   position:
     x: 0.0
     y: 0.0
@@ -32,6 +16,46 @@ lens:
 
 ray:
   origin:
+    x: 0.4
+    y: 0.0
+    z: -5.0
+  direction:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+
+ray:
+  origin:
+    x: 0.2
+    y: 0.0
+    z: -5.0
+  direction:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+
+ray:
+  origin:
+    x: 0.0
+    y: 0.4
+    z: -5.0
+  direction:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+
+ray:
+  origin:
+    x: 0.0
+    y: 0.2
+    z: -5.0
+  direction:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+
+ray:
+  origin:
     x: 0.0
     y: 0.0
     z: -5.0
@@ -39,3 +63,44 @@ ray:
     x: 0.0
     y: 0.0
     z: 1.0
+
+ray:
+  origin:
+    x: -0.2
+    y: 0.0
+    z: -5.0
+  direction:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+
+ray:
+  origin:
+    x: -0.4
+    y: 0.0
+    z: -5.0
+  direction:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+
+ray:
+  origin:
+    x: 0.0
+    y: -0.2
+    z: -5.0
+  direction:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+
+ray:
+  origin:
+    x: 0.0
+    y: -0.4
+    z: -5.0
+  direction:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+

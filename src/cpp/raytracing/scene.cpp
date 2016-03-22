@@ -164,8 +164,26 @@ void Scene::Render(bool draw_axes) {
   }
 
   // Render lenses.
-  for (size_t ii = 0; ii < lenses_.size(); ++ii) {
-    lenses_[ii].Render();
+  for (const auto& lens : lenses_)
+    lens.Render();
+
+  // Render ray paths.
+  for (const auto& path : paths_)
+    path.Render();
+}
+
+void Scene::ComputePaths() {
+  // Loop over rays, tracing their collisions and refractions off of lenses in
+  // the scene. Store all resulting ray paths.
+  paths_.clear();
+  for (const auto& ray : rays_) {
+    paths_.push_back(ray.Trace(lenses_));
+  }
+
+  // Make buffer objects for all new paths that were created.
+  for (auto& path : paths_){
+    path.Initialize();
+    path.MakeBufferObjects();
   }
 }
 
@@ -181,8 +199,8 @@ void Scene::RenderAxes() {
 }
 
 void Scene::MakeBufferObjects() {
-  for (unsigned ii = 0; ii < lenses_.size(); ++ii) {
-    lenses_[ii].MakeBufferObjects();
+  for (auto& lens : lenses_) {
+    lens.MakeBufferObjects();
   }
 }
 

@@ -64,9 +64,11 @@ class Lens {
   double GetThickness() const;
   double GetWidth() const;
   double GetIndexOfRefraction() const;
+  const glm::vec3& GetPosition() const;
   double GetX() const;
   double GetY() const;
   double GetZ() const;
+  const glm::vec3& GetOrientation() const;
   double GetRoll() const;
   double GetPitch() const;
   double GetYaw() const;
@@ -87,10 +89,10 @@ class Lens {
   void MakeBufferObjects();
 
   // Render this lens.
-  void Render();
+  void Render() const;
 
   // Print all lens parameters.
-  void Print(const std::string& prefix = std::string());
+  void Print(const std::string& prefix = std::string()) const;
 
  private:
 
@@ -136,8 +138,10 @@ class Lens {
   int index_size_;
 
   // Variables defining how a lens is rendered.
-  static constexpr double vertical_increment_ = 1.0 * M_PI / 180.0;
+  // static constexpr double vertical_increment_ = 1.0 * M_PI / 180.0;
+  static constexpr double vertical_increment_ = 5.0 * M_PI / 180.0;
   static constexpr double horizontal_increment_ = 5.0 * M_PI / 180.0;
+
 
 };
 
