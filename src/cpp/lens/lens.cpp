@@ -206,7 +206,12 @@ bool Lens::PopulateLensBufferObjects(bool lens1, std::vector<GLfloat>* vertices,
   const double sign = lens1 ? 1.0 : -1.0;
 
   // Figure out how many rings we need for the this surface.
-  const double alpha = 0.5 * M_PI - std::acos(0.5 * w_ / std::abs(radius));
+  double alpha = 0.0;
+  if (std::isinf(radius)) {
+    alpha = 0.5 * M_PI - std::acos(0.5 * w_);
+  } else {
+    alpha = 0.5 * M_PI - std::acos(0.5 * w_ / std::abs(radius));
+  }
   const unsigned int n_rings = std::floor(alpha / vertical_increment_);
 
   // Store vertical angles to iterate over.
@@ -248,21 +253,38 @@ bool Lens::PopulateLensBufferObjects(bool lens1, std::vector<GLfloat>* vertices,
     for (size_t jj = 0; jj < h_angles.size(); ++jj) {
       const double ha = h_angles[jj];
 
-      Vertex v = SphericalToCartesian(radius, va, ha);
-      v.z *= sign;
+      // Handle lenses with infinite radius separately.
+      Vertex v;
+      if (std::isinf(radius)) {
+        const double r = std::sin(va);
+        v.x = r * std::cos(ha);
+        v.y = r * std::sin(ha);
+        v.z = 0.0;
+      } else {
+        v = SphericalToCartesian(radius, va, ha);
+        v.z *= sign;
+      }
 
       // Rotate the vertex to the desired orientation.
       // TODO
 
       // Store the vertex's normal before translating it.
-      const double norm = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-      const double flip = radius < 0.0 ? -1.0 : 1.0;
-      normals->push_back(flip * v.x / norm);
-      normals->push_back(flip * v.y / norm);
-      normals->push_back(flip * v.z / norm);
+      if (std::isinf(radius)) {
+        normals->push_back(0.0);
+        normals->push_back(0.0);
+        normals->push_back(sign);
+      } else {
+        const double norm = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+        const double flip = radius < 0.0 ? -1.0 : 1.0;
+        normals->push_back(flip * v.x / norm);
+        normals->push_back(flip * v.y / norm);
+        normals->push_back(flip * v.z / norm);
+      }
 
       // Translate the vertex to the desired position.
-      v.z += sign * (offset - radius);
+      v.z += sign * offset;
+      if (!std::isinf(radius))
+        v.z -= sign * radius;
 
       v.x += position_.x;
       v.y += position_.y;

@@ -47,7 +47,7 @@ LensCollision::~LensCollision() {}
 bool LensCollision::Compute(const Ray& incoming, const Lens& lens) {
 
   // Check which face of the lens will be intersected first by the ray.
-  bool top_face = RayIntersectsTopFaceFirst(incoming, lens);
+  const bool top_face = RayIntersectsTopFaceFirst(incoming, lens);
 
   double distance = 0.0;
   if (RayIntersectsLensFace(top_face,
@@ -154,23 +154,38 @@ bool LensCollision::RayIntersectsLensFace(bool top_face,
   const double sign3 = radius > 0.0 ? 1.0 : -1.0;
   const glm::vec3 l = ray.GetDirection();
   const glm::vec3 o = ray.GetOrigin();
-  const glm::vec3 c = lens.GetPosition() +
-                      glm::vec3(0.0, 0.0, sign1 * 0.5 * lens.GetThickness()) -
-                      glm::vec3(0.0, 0.0, sign1 * radius);
+  glm::vec3 c = lens.GetPosition() +
+                glm::vec3(0.0, 0.0, sign1 * 0.5 * lens.GetThickness());
+  if (!std::isinf(radius)) {
+    c -= glm::vec3(0.0, 0.0, sign1 * radius);
+  }
+
   // TODO: c will need to be adjusted to take into account lens angle!
+  glm::vec3 collision_pt;
+  if (std::isinf(radius)) {
+    // If the lens radius is infinite, perform a plane-ray intersection check.
+    const glm::vec3 n(0.0, 0.0, sign1);
+    const double t = glm::dot(n, c - o) / glm::dot(n, l);
+    if (t < 0.0)
+      return false;
 
-  const double discrim = std::pow(glm::dot(l, o - c), 2.0) -
-                         std::pow(glm::length(o - c), 2.0) +
-                         std::pow(radius, 2.0);
-  if (discrim < 0.0)
-    return false;
+    *distance = t;
+    collision_pt = o + static_cast<float>(*distance) * l;
+  } else {
+    // If the lens radius is not infinite, perform a sphere-ray intersection
+    // check.
+    const double discrim = std::pow(glm::dot(l, o - c), 2.0) -
+                           std::pow(glm::length(o - c), 2.0) +
+                           std::pow(radius, 2.0);
+    if (discrim < 0.0)
+      return false;
 
-  *distance = -glm::dot(l, (o - c)) - sign2 * sign3 * std::sqrt(discrim);
-  if (*distance < 0.0)
-    return false;
+    *distance = -glm::dot(l, (o - c)) - sign2 * sign3 * std::sqrt(discrim);
+    if (*distance < 0.0)
+      return false;
 
-  const glm::vec3 collision_pt =
-      ray.GetOrigin() + static_cast<float>(*distance) * ray.GetDirection();
+    collision_pt = o + static_cast<float>(*distance) * l;
+  }
 
   // Is this collision point actually on the lens surface?
   const glm::vec3 plane(0.0, 0.0, 1.0);
@@ -198,11 +213,19 @@ Ray LensCollision::GetRefractedRay(bool top_face,
   const double sign2 = first_face ? 1.0 : -1.0;
   const double sign3 = radius > 0.0 ? 1.0 : -1.0;
 
-  const glm::vec3 c = lens.GetPosition() +
-                      glm::vec3(0.0, 0.0, sign1 * 0.5 * lens.GetThickness()) -
-                      glm::vec3(0.0, 0.0, sign1 * radius);
-  const glm::vec3 n = static_cast<float>(sign2) * static_cast<float>(sign3) *
-                      glm::normalize(collision_pt - c);
+  glm::vec3 c = lens.GetPosition() +
+                glm::vec3(0.0, 0.0, sign1 * 0.5 * lens.GetThickness());
+  if (!std::isinf(radius)) {
+    c -= glm::vec3(0.0, 0.0, sign1 * radius);
+  }
+
+  glm::vec3 n;
+  if (std::isinf(radius)) {
+    n = glm::vec3(0.0, 0.0, sign1 * sign2);
+  } else {
+    n = static_cast<float>(sign2) * static_cast<float>(sign3) *
+        glm::normalize(collision_pt - c);
+  }
 
   // Get angle between incoming ray and normal.
   const double incoming_angle = std::acos(glm::dot(n, -in.GetDirection()));

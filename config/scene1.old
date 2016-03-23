@@ -1,7 +1,7 @@
 lens:
   parameters:
     r1: inf
-    r2: inf
+    r2: 1.0
     t: 0.3
     w: 1.0
     n: 1.53
@@ -13,23 +13,6 @@ lens:
     roll: 0.0
     pitch: 0.0
     yaw: 0.0
-
-lens:
-  parameters:
-    r1: inf
-    r2: inf
-    t: 0.3
-    w: 1.0
-    n: 1.53
-  position:
-    x: 0.0
-    y: 0.0
-    z: 1.0
-  orientation:
-    roll: 0.0
-    pitch: 0.0
-    yaw: 0.0
-
 
 ray:
   origin:
