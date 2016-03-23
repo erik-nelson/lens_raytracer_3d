@@ -148,23 +148,24 @@ bool LensCollision::RayIntersectsLensFace(bool top_face,
                                           double* distance) const {
   // Sphere-Line intersection test from:
   // https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
-  const double sign = top_face ? 1.0 : -1.0;
   const double radius = top_face ? lens.GetRadius1() : lens.GetRadius2();
+  const double sign1 = top_face ? 1.0 : -1.0;
+  const double sign2 = first_face ? 1.0 : -1.0;
+  const double sign3 = radius > 0.0 ? 1.0 : -1.0;
   const glm::vec3 l = ray.GetDirection();
   const glm::vec3 o = ray.GetOrigin();
   const glm::vec3 c = lens.GetPosition() +
-                      glm::vec3(0.0, 0.0, sign * 0.5 * lens.GetThickness()) -
-                      glm::vec3(0.0, 0.0, sign * std::abs(radius));
+                      glm::vec3(0.0, 0.0, sign1 * 0.5 * lens.GetThickness()) -
+                      glm::vec3(0.0, 0.0, sign1 * radius);
   // TODO: c will need to be adjusted to take into account lens angle!
 
-  const double discrim = std::pow(glm::dot(l, (o - c)), 2.0) -
+  const double discrim = std::pow(glm::dot(l, o - c), 2.0) -
                          std::pow(glm::length(o - c), 2.0) +
                          std::pow(radius, 2.0);
   if (discrim < 0.0)
     return false;
 
-  *distance =
-      -glm::dot(l, (o - c)) - (first_face ? 1.0 : -1.0) * std::sqrt(discrim);
+  *distance = -glm::dot(l, (o - c)) - sign2 * sign3 * std::sqrt(discrim);
   if (*distance < 0.0)
     return false;
 
@@ -195,12 +196,13 @@ Ray LensCollision::GetRefractedRay(bool top_face,
   const double radius = top_face ? lens.GetRadius1() : lens.GetRadius2();
   const double sign1 = top_face ? 1.0 : -1.0;
   const double sign2 = first_face ? 1.0 : -1.0;
+  const double sign3 = radius > 0.0 ? 1.0 : -1.0;
 
   const glm::vec3 c = lens.GetPosition() +
                       glm::vec3(0.0, 0.0, sign1 * 0.5 * lens.GetThickness()) -
-                      glm::vec3(0.0, 0.0, sign1 * std::abs(radius));
-  const glm::vec3 n =
-      static_cast<float>(sign2) * glm::normalize(collision_pt - c);
+                      glm::vec3(0.0, 0.0, sign1 * radius);
+  const glm::vec3 n = static_cast<float>(sign2) * static_cast<float>(sign3) *
+                      glm::normalize(collision_pt - c);
 
   // Get angle between incoming ray and normal.
   const double incoming_angle = std::acos(glm::dot(n, -in.GetDirection()));
