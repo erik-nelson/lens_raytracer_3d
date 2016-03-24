@@ -86,8 +86,8 @@ int main(int argc, char** argv) {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDisable(GL_CULL_FACE);
   glEnable(GL_ALPHA_TEST);
-  glEnable(GL_LINE_SMOOTH);
-  glLineWidth(5.f);
+  glEnable(GL_POLYGON_SMOOTH);
+  glLineWidth(2.f);
   glClearDepth(1.f);
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);

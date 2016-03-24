@@ -83,9 +83,6 @@ class LensRaytracer {
   GLuint model_matrix_;
   GLuint view_matrix_;
   GLuint proj_matrix_;
-  GLuint ambient_mat_;
-  GLuint diffuse_mat_;
-  GLuint specular_mat_;
   GLuint camera_pos_;
 
   // Rendering options.

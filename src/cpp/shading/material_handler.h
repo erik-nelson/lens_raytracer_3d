@@ -36,43 +36,51 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Factory class for creating shaders.
+// This class gives access to static functions for globally changing material
+// properties. These functions can be called from any object immediately prior
+// to rendering to change the OpenGL material properties handed off to the
+// shader on the GPU.
 //
-///////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////
 
-#ifndef SHADING_SHADER_FACTORY_H
-#define SHADING_SHADER_FACTORY_H
+#ifndef SHADING_MATERIAL_HANDLER_H
+#define SHADING_MATERIAL_HANDLER_H
 
-#include <shading/shader.h>
+#include <shading/shader_factory.h>
 #include <utils/disallow_copy_and_assign.h>
 
-#include <OpenGL/gl.h>
-#include <map>
-
-class ShaderFactory {
+class MaterialHandler {
  public:
-  // Singleton.
-  static ShaderFactory* Instance();
-  ~ShaderFactory();
+  // Singleton
+  static MaterialHandler* Instance();
+  ~MaterialHandler();
 
-  bool Initialize(const std::string& key, const std::string& vertex_shader_file,
-                  const std::string& fragment_shader_file);
-  Shader* GetShader(const std::string& key);
+  void LinkWithShader(Shader* shader);
+  bool CheckLinked() const;
+
+  void SetPhongShading(bool on_or_off);
+  void SetAmbient(double r, double g, double b);
+  void SetDiffuse(double r, double g, double b);
+  void SetSpecular(double r, double g, double b);
+  void SetAlpha(double alpha);
 
  private:
-  // Ensure that ShaderFactory is a singleton.
-  DISALLOW_COPY_AND_ASSIGN(ShaderFactory)
-  ShaderFactory();
+  // Ensure that MaterialHandler is a singleton.
+  DISALLOW_COPY_AND_ASSIGN(MaterialHandler)
+  MaterialHandler();
 
-  bool LoadShaders(const std::string& key,
-                   const std::string& vertex_shader_file,
-                   const std::string& fragment_shader_file);
-  char* LoadFile(const std::string& filename);
-  bool CheckShaderSuccess(GLuint shader);
-  bool CheckProgramSuccess(GLuint program);
+  // Boolean flag reflecting whether the material handler has been linked with a
+  // shader.
+  bool linked_;
 
-  static ShaderFactory* instance_;
-  std::map<std::string, GLuint> shader_map_;
+  // Shader handles.
+  GLuint phong_shading_;
+  GLuint ambient_mat_;
+  GLuint diffuse_mat_;
+  GLuint specular_mat_;
+  GLuint alpha_;
+
+  static MaterialHandler* instance_;
 };
 
 #endif

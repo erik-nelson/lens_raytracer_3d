@@ -26,7 +26,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 # Add the source directories to the search path so cmake can find our headers.
 include_directories(${CMAKE_SOURCE_DIR}/src/cpp/)
 
-# Collect source files and build the lens_raytracer_3d object.
+#Collect source files and build the lens_raytracer_3d object.
 file(GLOB_RECURSE lr3d_srcs ${CMAKE_SOURCE_DIR}/src/cpp/*.cpp)
 add_library(lens_raytracer_3d ${lr3d_srcs})
 
@@ -38,6 +38,7 @@ add_subdirectory(exec)
 
 # Define shader and configuration file paths.
 add_definitions(-DLR3D_CONFIG_DIR="${CMAKE_SOURCE_DIR}/config")
+add_definitions(-DLR3D_SCENE_FILE="scene.yaml")
 add_definitions(-DLR3D_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/cpp/shaders")
 
 # Find and build tests.

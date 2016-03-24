@@ -35,6 +35,7 @@
  */
 
 #include <raytracing/lens_raytracer.h>
+#include <shading/material_handler.h>
 #include <shading/shader_factory.h>
 #include <strings/join_filepath.h>
 
@@ -75,6 +76,7 @@ bool LensRaytracer::Initialize(int window_width, int window_height) {
     std::cerr << "Failed to initialize shaders." << std::endl;
     return false;
   }
+  LinkShader();
 
   // Initialize viewing vectors.
   eye_ = glm::vec3(0.0, 0.0, -5.0);
@@ -83,7 +85,7 @@ bool LensRaytracer::Initialize(int window_width, int window_height) {
 
   // Load the scene.
   const std::string scene_file =
-      strings::JoinFilepath(LR3D_CONFIG_DIR, "scene1.yaml");
+      strings::JoinFilepath(LR3D_CONFIG_DIR, LR3D_SCENE_FILE);
   scene_.LoadFromFile(scene_file);
   scene_.MakeBufferObjects();
   scene_.ComputePaths();
@@ -169,8 +171,6 @@ void LensRaytracer::Update(GLFWwindow* window, double elapsed,
 }
 
 void LensRaytracer::Render(double elapsed, double total_elapsed) {
-  // Bind variables in program memory to shader variables.
-  LinkShader();
 
   // Set up model, view, and projection matrices.
   ResetModel();
@@ -180,9 +180,6 @@ void LensRaytracer::Render(double elapsed, double total_elapsed) {
 
   // Set camera position.
   glUniform3f(camera_pos_, eye_.x, eye_.y, eye_.z);
-
-  // Set materials.
-  SetMaterial();
 
   // Render the scene.
   scene_.Render(draw_axes_, eye_);
@@ -198,13 +195,11 @@ void LensRaytracer::LinkShader() {
   view_matrix_ = glGetUniformLocation(shader->GetProgram(), "u_view_matrix");
   proj_matrix_ = glGetUniformLocation(shader->GetProgram(), "u_proj_matrix");
 
-  // Link material properties.
-  ambient_mat_ = glGetUniformLocation(shader->GetProgram(), "u_ambient_mat");
-  diffuse_mat_ = glGetUniformLocation(shader->GetProgram(), "u_diffuse_mat");
-  specular_mat_ = glGetUniformLocation(shader->GetProgram(), "u_specular_mat");
-
   // Link camera position and look direction.
   camera_pos_ = glGetUniformLocation(shader->GetProgram(), "u_camera_position");
+
+  // Link shader materials with material handler object on CPU side.
+  MaterialHandler::Instance()->LinkWithShader(shader);
 
   // Start using the shader.
   shader->Use();
@@ -235,10 +230,4 @@ void LensRaytracer::ProjectionTransform() {
   const glm::mat4 proj =
       glm::perspective(hfov, aspect_ratio, near_plane, far_plane);
   glUniformMatrix4fv(proj_matrix_, 1, GL_FALSE, glm::value_ptr(proj));
-}
-
-void LensRaytracer::SetMaterial() {
-  glUniform3f(ambient_mat_, 0.25f, 0.25f, 0.25f);
-  glUniform3f(diffuse_mat_, 0.3f, 0.3f, 0.3f);
-  glUniform3f(specular_mat_, 0.3f, 0.3f, 0.3f);
 }

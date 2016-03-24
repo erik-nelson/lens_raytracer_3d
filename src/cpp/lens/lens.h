@@ -134,14 +134,17 @@ class Lens {
   glm::vec3 position_;
   glm::vec3 orientation_;
 
-  // Buffer objects.
+  // Buffer objects: lens vertices and normals, as well as index buffer objects
+  // to draw lens faces ('lens_index_buffer_object_') and the outline around
+  // lenses ('outline_index_buffer_objet_').
   GLuint vertex_buffer_object_;
   GLuint normal_buffer_object_;
-  GLuint index_buffer_object_;
-  int index_size_;
+  GLuint lens_index_buffer_object_;
+  GLuint outline_index_buffer_object_;
+  int lens_index_size_, outline_index_size_;
 
   // Variables defining how a lens is rendered.
-  static constexpr double vertical_increment_ = 1.0 * M_PI / 180.0;
+  static constexpr double vertical_increment_ = 5.0 * M_PI / 180.0;
   static constexpr double horizontal_increment_ = 5.0 * M_PI / 180.0;
 
 };

@@ -36,6 +36,8 @@
 
 #include <raytracing/path.h>
 
+#include <shading/material_handler.h>
+
 #include <iostream>
 
 Path::Path() {}
@@ -125,6 +127,14 @@ void Path::MakeBufferObjects() {
 }
 
 void Path::Render() const {
+  // Set material properties to transparent green with no phong shading.
+  MaterialHandler::Instance()->SetAmbient(0.0, 1.0, 0.0);
+  MaterialHandler::Instance()->SetDiffuse(1.0, 1.0, 1.0);
+  MaterialHandler::Instance()->SetSpecular(1.0, 1.0, 1.0);
+  MaterialHandler::Instance()->SetAlpha(0.8);
+  MaterialHandler::Instance()->SetPhongShading(false);
+
+  // Draw.
   glEnableVertexAttribArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object_);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);

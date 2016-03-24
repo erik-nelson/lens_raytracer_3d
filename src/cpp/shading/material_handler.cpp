@@ -34,45 +34,66 @@
  * Author: Erik Nelson            ( eanelson@eecs.berkeley.edu )
  */
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// Factory class for creating shaders.
-//
-///////////////////////////////////////////////////////////////////////////////
+#include <shading/material_handler.h>
 
-#ifndef SHADING_SHADER_FACTORY_H
-#define SHADING_SHADER_FACTORY_H
+#include <iostream>
 
-#include <shading/shader.h>
-#include <utils/disallow_copy_and_assign.h>
+MaterialHandler* MaterialHandler::instance_ = NULL;
 
-#include <OpenGL/gl.h>
-#include <map>
+MaterialHandler::MaterialHandler() : linked_(false) {}
 
-class ShaderFactory {
- public:
-  // Singleton.
-  static ShaderFactory* Instance();
-  ~ShaderFactory();
+MaterialHandler::~MaterialHandler() {}
 
-  bool Initialize(const std::string& key, const std::string& vertex_shader_file,
-                  const std::string& fragment_shader_file);
-  Shader* GetShader(const std::string& key);
+MaterialHandler* MaterialHandler::Instance() {
+  if (instance_ == NULL)
+    instance_ = new MaterialHandler();
 
- private:
-  // Ensure that ShaderFactory is a singleton.
-  DISALLOW_COPY_AND_ASSIGN(ShaderFactory)
-  ShaderFactory();
+  return instance_;
+}
 
-  bool LoadShaders(const std::string& key,
-                   const std::string& vertex_shader_file,
-                   const std::string& fragment_shader_file);
-  char* LoadFile(const std::string& filename);
-  bool CheckShaderSuccess(GLuint shader);
-  bool CheckProgramSuccess(GLuint program);
+void MaterialHandler::LinkWithShader(Shader* shader) {
+  if (!shader) {
+    std::cerr << "Shader pointer is null." << std::endl;
+  }
 
-  static ShaderFactory* instance_;
-  std::map<std::string, GLuint> shader_map_;
-};
+  phong_shading_ = glGetUniformLocation(shader->GetProgram(), "u_phong_shading");
+  ambient_mat_ = glGetUniformLocation(shader->GetProgram(), "u_ambient_mat");
+  diffuse_mat_ = glGetUniformLocation(shader->GetProgram(), "u_diffuse_mat");
+  specular_mat_ = glGetUniformLocation(shader->GetProgram(), "u_specular_mat");
+  alpha_ = glGetUniformLocation(shader->GetProgram(), "u_alpha");
 
-#endif
+  linked_ = true;
+}
+
+bool MaterialHandler::CheckLinked() const {
+  if (!linked_) {
+    std::cerr << "Shader not linked to material handler." << std::endl;
+    return false;
+  }
+  return true;
+}
+
+void MaterialHandler::SetPhongShading(bool on_or_off) {
+  CheckLinked();
+  glUniform1f(phong_shading_, on_or_off ? 1.0 : 0.0);
+}
+
+void MaterialHandler::SetAmbient(double r, double g, double b) {
+  CheckLinked();
+  glUniform3f(ambient_mat_, r, g, b);
+}
+
+void MaterialHandler::SetDiffuse(double r, double g, double b) {
+  CheckLinked();
+  glUniform3f(diffuse_mat_, r, g, b);
+}
+
+void MaterialHandler::SetSpecular(double r, double g, double b) {
+  CheckLinked();
+  glUniform3f(specular_mat_, r, g, b);
+}
+
+void MaterialHandler::SetAlpha(double alpha) {
+  CheckLinked();
+  glUniform1f(alpha_, alpha);
+}

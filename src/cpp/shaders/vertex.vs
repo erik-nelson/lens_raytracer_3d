@@ -5,16 +5,20 @@
 uniform mat4 u_model_matrix;
 uniform mat4 u_view_matrix;
 uniform mat4 u_proj_matrix;
+uniform vec3 u_camera_position;
+uniform float u_phong_shading;
+uniform float u_alpha;
 uniform vec3 u_ambient_mat;
 uniform vec3 u_diffuse_mat;
 uniform vec3 u_specular_mat;
-uniform vec3 u_camera_position;
 
 // Attributes passed from the CPU.
 attribute vec3 a_position;
 attribute vec3 a_normal;
 
 // Variables that will be passed to the fragment shader.
+varying float v_phong_shading;
+varying float v_alpha;
 varying vec3 v_vertex_normal;
 varying vec3 v_ambient_color;
 varying vec3 v_diffuse_color;
@@ -42,8 +46,11 @@ void main() {
   v_light_color = LIGHTCOL;
 
   // Set the remaining varying variables for the fragment shader.
+  v_camera_position = u_camera_position;
+  v_phong_shading = u_phong_shading;
   v_ambient_color = u_ambient_mat;
   v_diffuse_color = u_diffuse_mat;
   v_specular_color = u_specular_mat;
-  v_camera_position = u_camera_position;
+  v_alpha = u_alpha;
+
 }

@@ -36,9 +36,18 @@
 
 #include <lens/lens.h>
 
+#include <shading/material_handler.h>
+
 #include <iostream>
 
-Lens::Lens() : r1_(0.0), r2_(0.0), t_(0.0), w_(0.0), n_(0.0), index_size_(0) {
+Lens::Lens()
+    : r1_(0.0),
+      r2_(0.0),
+      t_(0.0),
+      w_(0.0),
+      n_(0.0),
+      lens_index_size_(0),
+      outline_index_size_(0) {
   // Initialize position and orientation to zero.
   position_ = glm::vec3(0.f);
   orientation_ = glm::vec3(0.f);
@@ -46,19 +55,21 @@ Lens::Lens() : r1_(0.0), r2_(0.0), t_(0.0), w_(0.0), n_(0.0), index_size_(0) {
 
 Lens::~Lens() {
   // Free buffer objects.
-  GLuint buffers[3] = {vertex_buffer_object_,
+  GLuint buffers[4] = {vertex_buffer_object_,
                        normal_buffer_object_,
-                       index_buffer_object_};
-  glDeleteBuffers(3, buffers);
+                       lens_index_buffer_object_,
+                       outline_index_buffer_object_};
+  glDeleteBuffers(4, buffers);
 }
 
 void Lens::Initialize() {
   // Initialize buffer objects.
-  GLuint buffers[3];
-  glGenBuffers(3, buffers);
+  GLuint buffers[4];
+  glGenBuffers(4, buffers);
   vertex_buffer_object_ = buffers[0];
   normal_buffer_object_ = buffers[1];
-  index_buffer_object_ = buffers[2];
+  lens_index_buffer_object_ = buffers[2];
+  outline_index_buffer_object_ = buffers[3];
 }
 
 double Lens::GetRadius1() const {
@@ -181,11 +192,31 @@ void Lens::MakeBufferObjects() {
   glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(GLfloat),
                &normals.front(), GL_STATIC_DRAW);
 
-  // Pack index data into a buffer object.
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_object_);
+  // Pack lens index data into a buffer object.
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lens_index_buffer_object_);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint),
                &indices.front(), GL_STATIC_DRAW);
-  index_size_ = indices.size() * sizeof(GLuint);
+  lens_index_size_ = indices.size() * sizeof(GLuint);
+
+  // Create a buffer containing the lens outline.
+  std::vector<GLuint> outline_indices;
+  for (size_t ii = 0; ii < cylinder_indices1.size() - 1; ++ii) {
+    outline_indices.push_back(cylinder_indices1[ii]);
+    outline_indices.push_back(cylinder_indices1[ii+1]);
+  }
+  outline_indices.push_back(cylinder_indices1.back());
+  outline_indices.push_back(cylinder_indices1.front());
+  for (size_t ii = 0; ii < cylinder_indices2.size() - 1; ++ii) {
+    outline_indices.push_back(cylinder_indices2[ii]);
+    outline_indices.push_back(cylinder_indices2[ii+1]);
+  }
+  outline_indices.push_back(cylinder_indices2.back());
+  outline_indices.push_back(cylinder_indices2.front());
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, outline_index_buffer_object_);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, outline_indices.size() * sizeof(GLuint),
+               &outline_indices.front(), GL_STATIC_DRAW);
+  outline_index_size_ = outline_indices.size() * sizeof(GLuint);
 }
 
 bool Lens::PopulateLensBufferObjects(bool lens1, std::vector<GLfloat>* vertices,
@@ -387,8 +418,29 @@ void Lens::Render() const {
   glEnableVertexAttribArray(1);
   glBindBuffer(GL_ARRAY_BUFFER, normal_buffer_object_);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_object_);
-  glDrawElements(GL_TRIANGLES, index_size_, GL_UNSIGNED_INT, 0);
+
+  // Set material properties to opaque black with no phong shading.
+  MaterialHandler::Instance()->SetAmbient(0.0, 0.0, 0.0);
+  MaterialHandler::Instance()->SetDiffuse(1.0, 1.0, 1.0);
+  MaterialHandler::Instance()->SetSpecular(1.0, 1.0, 1.0);
+  MaterialHandler::Instance()->SetAlpha(1.0);
+  MaterialHandler::Instance()->SetPhongShading(false);
+
+  // Draw lens outline.
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, outline_index_buffer_object_);
+  glDrawElements(GL_LINES, outline_index_size_, GL_UNSIGNED_INT, 0);
+
+  // Set material properties to transparent light blue with phong shading.
+  MaterialHandler::Instance()->SetAmbient(0.0, 0.1, 0.3);
+  MaterialHandler::Instance()->SetDiffuse(0.0, 0.2, 0.7);
+  MaterialHandler::Instance()->SetSpecular(0.0, 0.0, 0.0);
+  MaterialHandler::Instance()->SetAlpha(0.5);
+  MaterialHandler::Instance()->SetPhongShading(true);
+
+  // Draw lens geometry.
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lens_index_buffer_object_);
+  glDrawElements(GL_TRIANGLES, lens_index_size_, GL_UNSIGNED_INT, 0);
+
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glDisableVertexAttribArray(0);
@@ -417,8 +469,8 @@ void Lens::Print(const std::string& prefix) const {
 Lens::Vertex Lens::SphericalToCartesian(double radius, double vertical_angle,
                                         double horizontal_angle) {
   Vertex vertex;
-  vertex.x = radius * sin(vertical_angle) * cos(horizontal_angle);
-  vertex.y = radius * sin(vertical_angle) * sin(horizontal_angle);
+  vertex.x = std::abs(radius) * sin(vertical_angle) * cos(horizontal_angle);
+  vertex.y = std::abs(radius) * sin(vertical_angle) * sin(horizontal_angle);
   vertex.z = radius * cos(vertical_angle);
   return vertex;
 }
