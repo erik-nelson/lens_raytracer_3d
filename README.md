@@ -2,7 +2,7 @@
 
 This repository holds a raytracing library for simulating and testing camera lens stacks.
 
-![alt text](https://github.com/erik-nelson/lens_raytracer_3d/blob/master/simulation.png =250x "Lens Raytracing Simulation")
+![alt text](https://github.com/erik-nelson/lens_raytracer_3d/blob/master/simulation.png "Lens Raytracing Simulation")
 
 ## Status
 This library is currently in development.
