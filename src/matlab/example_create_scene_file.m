@@ -25,3 +25,6 @@ for a = 0 : (pi/4) : 2*pi
         make_ray([x, y, 2.0], [0, 0, -1.0]);
     end
 end
+
+% Run the raytracer via a subprocess call to the C++ executable.
+run_raytracer;
