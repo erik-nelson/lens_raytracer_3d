@@ -144,7 +144,7 @@ class Lens {
   int lens_index_size_, outline_index_size_;
 
   // Variables defining how a lens is rendered.
-  static constexpr double vertical_increment_ = 5.0 * M_PI / 180.0;
+  static constexpr double vertical_increment_ = 1.0 * M_PI / 180.0;
   static constexpr double horizontal_increment_ = 5.0 * M_PI / 180.0;
 
 };
