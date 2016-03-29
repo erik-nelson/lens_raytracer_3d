@@ -61,12 +61,9 @@ end
 focal_len = 0.188679;
 for a = 0 : (pi/4) : 2*pi
     for radius = 0.01 : 0.05 : 0.2
-        x = radius * cos(a);
-        y = radius * sin(a);
         direction = [radius * cos(a), radius * sin(a), 1];
-        direction = direction ./ norm(direction);
-        make_ray([-0.15, 0.15, -3.0 - focal_len], direction);
-        make_ray([0.25, -0.25, -3.0 - focal_len], direction);
+        make_ray([-0.15, 0.15, -3.188679], direction ./ norm(direction));
+        make_ray([0.25, -0.25, -3.188679], direction ./ norm(direction));
     end
 end
 
