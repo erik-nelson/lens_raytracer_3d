@@ -189,8 +189,8 @@ bool LensCollision::RayIntersectsLensFace(bool top_face,
 
   // Is this collision point actually on the lens surface?
   const glm::vec3 plane(0.0, 0.0, 1.0);
-  const glm::vec3 projected =
-      collision_pt - glm::dot(collision_pt, plane) * plane;
+  glm::vec3 projected = collision_pt - glm::dot(collision_pt, plane) * plane;
+  projected -= glm::vec3(lens.GetPosition().x, lens.GetPosition().y, 0.0);
   if (glm::length(projected) > std::abs(0.5 * lens.GetWidth())) {
     *distance = 0.0;
     return false;

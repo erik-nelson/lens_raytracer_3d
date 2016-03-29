@@ -34,8 +34,7 @@
 
 
 % This script provides an example for how to create a scene file for
-% raytracing. An image of the resulting raytraced scene is shown in
-% 'simulation.png' in the top directory of this repository.
+% raytracing.
 clc; close all; clear;
 
 % Clear whatever scene file currently exists.
@@ -51,13 +50,23 @@ make_lens(inf, 1.0, 0.15, 0.8, n, [0, 0, -0.285], [0, 0, 0]);
 make_lens(-3.0, 0.9, 0.1, 0.9, n, [0, 0, -0.42], [0, 0, 0]);
 make_lens(3.0, 5.0, 0.07, 1.0, n, [0, 0, -0.52], [0, 0, 0]);
 
-% Make some rays in a circle pattern facing towards the lens stack
-% (negative z direction).
+% Make an array of micro lenses.
+for x = -0.45 : 0.1 : 0.45
+    for y = -0.45 : 0.1 : 0.45
+        make_lens(0.1, inf, 0.03, 0.1, n, [x, y, -3.0], [0, 0, 0]);
+    end
+end
+
+% Generate two sets of rays passing through different microlenses.
+focal_len = 0.188679;
 for a = 0 : (pi/4) : 2*pi
-    for radius = 0.2 : 0.2 : 0.4
+    for radius = 0.01 : 0.05 : 0.2
         x = radius * cos(a);
         y = radius * sin(a);
-        make_ray([x, y, 2.0], [0, 0, -1.0]);
+        direction = [radius * cos(a), radius * sin(a), 1];
+        direction = direction ./ norm(direction);
+        make_ray([-0.15, 0.15, -3.0 - focal_len], direction);
+        make_ray([0.25, -0.25, -3.0 - focal_len], direction);
     end
 end
 
