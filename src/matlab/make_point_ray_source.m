@@ -33,44 +33,57 @@
 % Author: Erik Nelson            ( eanelson@eecs.berkeley.edu )
 
 
-function make_ray(origin, direction)
+function make_point_ray_source(point, direction, v_angles, h_angles)
 % Opens the scene file under 'lens_raytracer_3d/config/scene.yaml' and
-% writes a new ray element.
+% writes an array of ray elements originating from the input point. Rays
+% will be generated beginning from the specified direction in a cone
+% outwards according to the specified vertical and horizontal angles.
 % Input parameters:
-%   - origin    : A 3-element vector specifying the origin of the ray.
-%   - direction : A 3-element vector specifying the direction of the ray.
+%   - point     : A point in 3D space from which rays will originate.
+%   - direction : A 3-element direction vector specifying the center 
+%                 direction from which rays will eminate.
+%   - v_angles  : A list of vertical angles to generate rays (outwards from
+%                 the specified direction).
+%   - h_angles  : A list of horizontal angles to generate rays (outwards
+%                 from the specified direction).
 
-file_path = '../../config/';
-scene_file = 'scene.yaml';
-
-% Check if the scene file exists. If not, create it.
-if exist([file_path, scene_file], 'file') ~= 2
-    reset_scene_file;
+% Check for correct input.
+if numel(point) ~= 3
+    disp('Point argument must be a 3D point.');
+    return;
 end
 
-% Open the scene file.
-fh = fopen([file_path, scene_file], 'at');
+if numel(direction) ~= 3
+    disp('Direction argument must be a 3D vector.');
+    return;
+end
 
-% Append the ray information to the end of the file.
-fprintf(fh, ['ray:'...
-    '\n\torigin:'...
-    '\n\t\tx: %.3f'...
-    '\n\t\ty: %.3f'...
-    '\n\t\tz: %.3f'...
-    '\n\tdirection:'...
-    '\n\t\tx: %.3f'...
-    '\n\t\ty: %.3f'...
-    '\n\t\tz: %.3f'...
-    '\n'],...
-    origin(1), origin(2), origin(3),...
-    direction(1), direction(2), direction(3));
+% Find one vector orthogonal to the direction vector w/ Gram Schmidt.
+proj = @(x, y) x'*y / (y'*y) * y;
+r = rand(3,1);
+u = r(:,1) - proj(r(:,1), direction);
+u = u./norm(u);
 
-fprintf(1, ['\nWrote the following ray to %s:'...
-     '\n\torigin:\n\t\tx: %.2f\n\t\ty: %.2f\n\t\tz: %.2f'...
-     '\n\tdirection:\n\t\tx: %.2f\n\t\ty: %.2f\n\t\tz: %.2f\n'],...
-     [file_path, scene_file],...
-     origin(1), origin(2), origin(3),...
-     direction(1), direction(2), direction(3));
+% Define rotation matrices about the direction and its orthogonal vector.
+rot_d = @(theta) vrrotvec2mat([direction; theta]);
+rot_u = @(theta) vrrotvec2mat([u; theta]);
 
-% Close the scene file.
-fclose(fh);
+% Initialize containers for writing out rays.
+n_rays = numel(v_angles) * numel(h_angles);
+origins = repmat(point, 1, n_rays)';
+directions = zeros(n_rays, 3);
+
+% Compute ray directions based on input.
+for ii=1:numel(v_angles)
+    d = rot_u(v_angles(ii)) * direction;
+    for jj=1:numel(h_angles)
+        index = (ii-1) * numel(h_angles) + jj;
+        directions(index, :) = (rot_d(h_angles(jj)) * d)'; 
+    end
+end
+
+% Normalize output directions.
+directions = normr(directions);
+
+% Write ray parameters to the scene file.
+make_rays(origins, directions);
