@@ -8,7 +8,7 @@ This repository holds a raytracing library for simulating and testing camera len
 This library is currently in development.
 
 ## Overview
-This repository is entirely written in C++, and is structured around the CMAKE cross-compilation paradigm. All source code is in the `lens_raytracer_3d/src/cpp/` directory.
+This repository is entirely written in C++ and MATLAB, and is structured around the CMAKE cross-compilation paradigm. All source code is in the `lens_raytracer_3d/src/` directory.
 
 ## Easy Build and Run Instructions
 Open a MATLAB instance, then
